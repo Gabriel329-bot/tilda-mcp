@@ -1,0 +1,126 @@
+import crypto from 'crypto';
+import { BlockPayload, PackagedBlock, ValidationResult } from '../types/index.js';
+import { validateBlockGuardrails, scopeCss } from './guardrails.js';
+
+export interface PackageBlockOptions {
+  autoScopeCss?: boolean;
+  strictValidation?: boolean;
+}
+
+/**
+ * Packages HTML markup, CSS styles, and JS logic into an isolated, self-contained
+ * snippet ready for injection into a Tilda T123 (HTML-код) block.
+ */
+export function packageBlock(
+  payload: BlockPayload,
+  options: PackageBlockOptions = { autoScopeCss: true, strictValidation: false }
+): { packaged: PackagedBlock; validation: ValidationResult } {
+  // Generate a random unique ID for the block scope
+  const uniqueHash = crypto.randomBytes(4).toString('hex');
+  const containerId = `block-ai-${uniqueHash}`;
+
+  let processedHtml = payload.htmlMarkup.trim();
+  let processedCss = payload.cssStyles.trim();
+  const processedJs = (payload.jsCode || '').trim();
+
+  // If root markup does not have the container ID, wrap it in a container
+  if (!processedHtml.includes(containerId)) {
+    // If the HTML already has a root element with class 'ai-custom-section', add id
+    if (processedHtml.startsWith('<div') && !processedHtml.includes('id=')) {
+      processedHtml = processedHtml.replace(
+        '<div',
+        `<div id="${containerId}" data-ai-block="${escapeAttr(payload.blockName)}"`
+      );
+    } else {
+      processedHtml = `
+<div id="${containerId}" class="ai-custom-section" data-ai-block="${escapeAttr(payload.blockName)}">
+${processedHtml}
+</div>`.trim();
+    }
+  }
+
+  // Ensure CSS is scoped
+  if (options.autoScopeCss) {
+    processedCss = scopeCss(processedCss, containerId);
+  }
+
+  // Validate against guardrails
+  const validation = validateBlockGuardrails(containerId, processedCss, processedHtml);
+
+  if (options.strictValidation && !validation.valid) {
+    const errorMsgs = validation.issues
+      .filter((i) => i.type === 'error')
+      .map((i) => i.message)
+      .join('; ');
+    throw new Error(`Block failed guardrails validation: ${errorMsgs}`);
+  }
+
+  // Build isolated script wrapper if JS is present
+  const scriptTag = processedJs
+    ? `
+<script>
+(function() {
+  'use strict';
+  function initBlock() {
+    var root = document.getElementById('${containerId}');
+    if (!root) return;
+    try {
+      ${processedJs}
+    } catch (err) {
+      console.error('[Tilda-AI Block: ${escapeAttr(payload.blockName)}] Script error:', err);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initBlock);
+  } else {
+    initBlock();
+  }
+})();
+</script>`.trim()
+    : '';
+
+  // Combine into single T123 HTML code snippet
+  const fullSnippet = `
+<!-- ========================================== -->
+<!-- AI Custom Block: ${escapeComment(payload.blockName)} -->
+<!-- Container: #${containerId} -->
+<!-- ========================================== -->
+
+${processedHtml}
+
+<style>
+/* Reset & Base Isolation for #${containerId} */
+#${containerId} {
+  box-sizing: border-box;
+  width: 100%;
+  position: relative;
+}
+#${containerId} *,
+#${containerId} *::before,
+#${containerId} *::after {
+  box-sizing: inherit;
+}
+
+${processedCss}
+</style>
+
+${scriptTag}
+`.trim();
+
+  return {
+    packaged: {
+      blockId: uniqueHash,
+      containerId,
+      fullSnippet,
+    },
+    validation,
+  };
+}
+
+function escapeAttr(str: string): string {
+  return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function escapeComment(str: string): string {
+  return str.replace(/-->/g, '-- >');
+}
