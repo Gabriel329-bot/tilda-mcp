@@ -26,7 +26,7 @@
     "vision"
   ],
   "author": "Principal Automation Engineer",
-  "license": "MIT",
+  "license": "BSL-1.1",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
     "dotenv": "^16.4.7",

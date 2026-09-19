@@ -1,0 +1,36 @@
+Business Source License 1.1
+
+Parameters:
+
+Licensor: Gabriel Andranikyan (GAB)
+Licensed Work: Tilda MCP Server (including all source files, drivers, and presets)
+Additional Use Grant:
+  You may use the Licensed Work for evaluation, non-commercial purposes, personal education,
+  and non-monetized private projects.
+  You may NOT:
+  1. Use the Licensed Work in any commercial service, consulting, client work, or agency production.
+  2. Offer the Licensed Work as a hosted service, public API, managed proxy, or as part of a paid product.
+  Any commercial deployment requires a commercial license granted explicitly by the Licensor.
+Change Date: 2029-01-01
+Change License: GNU General Public License v3.0 or later (GPL-3.0-or-later)
+
+----------------------------------------------------------------------
+
+[Text of the Business Source License 1.1 follows]
+
+The Licensor hereby grants you the right to copy, modify, create derivative works,
+redistribute, and make non-production use of the Licensed Work. The Licensor also
+grants you an additional right to make a specified commercial or production use,
+which is governed by the Additional Use Grant, and that may be subject to conditions
+specified in the Additional Use Grant.
+
+Effective on the Change Date, the Licensor hereby grants you the rights to copy,
+modify, create derivative works, redistribute, and sub-license the Licensed Work
+under the Change License.
+
+All copies and distributions of the Licensed Work, or any portion thereof, in
+any form, must retain this license text and copyright notices.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
