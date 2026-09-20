@@ -133,6 +133,25 @@ import { AnalyticsOptions, AnalyticsOrchestrator } from './analytics-orchestrato
 
 export const TAILWIND_HEADER_CDN = `<script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">`;
 
+/**
+ * Compensates for fixed/absolute header height on pages without a Hero section.
+ * Replaces standard top padding (py-24, py-10, py-16) with extended top padding (pt-28 sm:pt-32 pb-24)
+ * and attaches the .has-header-offset CSS class.
+ */
+export function applyHeaderOffset(html: string): string {
+  if (!html) return html;
+  if (html.includes('py-24')) {
+    return html.replace('py-24', 'pt-28 sm:pt-32 pb-24 has-header-offset');
+  }
+  if (html.includes('py-10')) {
+    return html.replace('py-10', 'pt-28 sm:pt-32 pb-10 has-header-offset');
+  }
+  if (html.includes('py-16')) {
+    return html.replace('py-16', 'pt-28 sm:pt-32 pb-16 has-header-offset');
+  }
+  return html.replace(/(<(?:section|div)[^>]*class=")([^"]*)/, '$1pt-28 sm:pt-32 has-header-offset $2');
+}
+
 export interface T123BlockPackage {
   tplId: 'T123';
   fields: {

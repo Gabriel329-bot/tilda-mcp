@@ -8,6 +8,7 @@ import { SeoOrchestrator } from './seo-orchestrator.js';
 import { ThemeTokens, getThemeTokens } from '../templates/theme-tokens.js';
 import { getPresetCss, StylePresetName } from '../styles/presets.js';
 import { AnalyticsOptions, AnalyticsOrchestrator } from './analytics-orchestrator.js';
+import { applyHeaderOffset } from './block-packager.js';
 
 export interface PreviewLandingOptions {
   landingTitle?: string;
@@ -141,37 +142,49 @@ export function buildLocalPreview(options: PreviewLandingOptions): PreviewBuildR
     sectionsHtml.push(headerHtml);
   }
 
+  let isFirstContent = !sections.hero;
+  const addContentSection = (html: string) => {
+    if (isFirstContent) {
+      sectionsHtml.push(applyHeaderOffset(html));
+      isFirstContent = false;
+    } else {
+      sectionsHtml.push(html);
+    }
+  };
+
   // 3. Hero Section
-  sectionsHtml.push(TemplateEngine.renderHero(sections.hero, heroBg, theme));
+  if (sections.hero) {
+    sectionsHtml.push(TemplateEngine.renderHero(sections.hero, heroBg, theme));
+  }
 
   // 4. Marquee Section
   if (sections.marquee) {
-    sectionsHtml.push(TemplateEngine.renderMarquee(sections.marquee.items, theme));
+    addContentSection(TemplateEngine.renderMarquee(sections.marquee.items, theme));
   }
 
   // 5. Bento Grid Features
   if (sections.features) {
-    sectionsHtml.push(TemplateEngine.renderBento(sections.features, theme));
+    addContentSection(TemplateEngine.renderBento(sections.features, theme));
   }
 
   // 6. Timeline / How it works
   if (sections.timeline) {
-    sectionsHtml.push(TemplateEngine.renderTimeline(sections.timeline, theme));
+    addContentSection(TemplateEngine.renderTimeline(sections.timeline, theme));
   }
 
   // 7. Metrics
   if (sections.metrics) {
-    sectionsHtml.push(TemplateEngine.renderMetrics(sections.metrics, theme));
+    addContentSection(TemplateEngine.renderMetrics(sections.metrics, theme));
   }
 
   // 8. Calculator
   if (sections.calculator) {
-    sectionsHtml.push(TemplateEngine.renderCalculator(sections.calculator, theme));
+    addContentSection(TemplateEngine.renderCalculator(sections.calculator, theme));
   }
 
   // 9. Pricing
   if (sections.pricing) {
-    sectionsHtml.push(TemplateEngine.renderPricing(sections.pricing, theme));
+    addContentSection(TemplateEngine.renderPricing(sections.pricing, theme));
   }
 
   // 10. Testimonials
@@ -213,17 +226,17 @@ export function buildLocalPreview(options: PreviewLandingOptions): PreviewBuildR
   </div>
 </section>`.trim();
 
-    sectionsHtml.push(testHtml);
+    addContentSection(testHtml);
   }
 
   // 11. FAQ Accordion
   if (sections.faq) {
-    sectionsHtml.push(TemplateEngine.renderFAQ(sections.faq, theme));
+    addContentSection(TemplateEngine.renderFAQ(sections.faq, theme));
   }
 
   // 12. Contact / Lead Form
   if (sections.form) {
-    sectionsHtml.push(
+    addContentSection(
       TemplateEngine.renderContact(
         sections.form,
         sections.form.webhook_url,
@@ -268,8 +281,20 @@ export function buildLocalPreview(options: PreviewLandingOptions): PreviewBuildR
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/imask"></script>
   <style>
+    :root {
+      --card-radius: ${theme.radiusCard || '12px'};
+      --btn-radius: ${theme.radiusBtn || '8px'};
+    }
     html { scroll-behavior: smooth; }
     body { margin: 0; padding: 0; }
+    .has-header-offset {
+      padding-top: 7rem !important;
+    }
+    @media (min-width: 640px) {
+      .has-header-offset {
+        padding-top: 8rem !important;
+      }
+    }
     ${effectiveCss}
   </style>
 </head>

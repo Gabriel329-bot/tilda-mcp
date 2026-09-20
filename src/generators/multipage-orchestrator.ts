@@ -12,9 +12,14 @@ import {
   packageMarqueeSection,
   packageTimelineSection,
   packageCalculatorSection,
+  applyHeaderOffset,
 } from './block-packager.js';
-import { AnalyticsOptions } from './analytics-orchestrator.js';
+import { AnalyticsOptions, AnalyticsOrchestrator } from './analytics-orchestrator.js';
+import { SeoOrchestrator } from './seo-orchestrator.js';
+import { ThemeTokens, getThemeTokens } from '../templates/theme-tokens.js';
 import { buildLocalPreview } from './preview-builder.js';
+
+export { applyHeaderOffset };
 
 export interface PageSpec {
   slug: string;
@@ -56,6 +61,45 @@ export interface MultipageSiteReport {
   navigation_map: Record<string, string>;
   cross_linking_status: 'verified' | 'partial' | 'failed';
   total_elapsed_time_ms: number;
+}
+
+/**
+ * Resolves CTA button links referencing other pages (#slug or slug) to their actual URLs.
+ */
+export function resolveCrossLinks(sections: any, slugToUrl: Record<string, string>, currentSlug: string) {
+  if (!sections) return;
+
+  const resolveHref = (href?: string): string | undefined => {
+    if (!href) return href;
+    const target = href.startsWith('#') ? href.slice(1) : href;
+    if (target !== currentSlug && slugToUrl[target]) {
+      return slugToUrl[target];
+    }
+    if ((target === 'form' || target === 'contact') && currentSlug !== 'contact' && slugToUrl['contact']) {
+      return slugToUrl['contact'];
+    }
+    if (target === 'pricing' && currentSlug !== 'pricing' && slugToUrl['pricing']) {
+      return slugToUrl['pricing'];
+    }
+    return href;
+  };
+
+  if (sections.hero) {
+    if (sections.hero.btn1?.href) sections.hero.btn1.href = resolveHref(sections.hero.btn1.href);
+    if (sections.hero.btn2?.href) sections.hero.btn2.href = resolveHref(sections.hero.btn2.href);
+    if (sections.hero.btn1_href) sections.hero.btn1_href = resolveHref(sections.hero.btn1_href);
+    if (sections.hero.btn2_href) sections.hero.btn2_href = resolveHref(sections.hero.btn2_href);
+  }
+
+  if (sections.calculator) {
+    if (sections.calculator.btn_href) sections.calculator.btn_href = resolveHref(sections.calculator.btn_href);
+  }
+
+  if (sections.pricing?.plans) {
+    sections.pricing.plans.forEach((plan: any) => {
+      if (plan.btn_href) plan.btn_href = resolveHref(plan.btn_href);
+    });
+  }
 }
 
 /**
@@ -151,11 +195,43 @@ export class MultipageOrchestrator {
         const colormode = pagePreset === 'dark' ? 'dark' : 'light';
         const sections = page.sections || {};
 
-        // 1. Header with unified Cross-Page Navigation
+        // Resolve cross-page links in section CTA buttons
+        resolveCrossLinks(sections, slugToUrl, page.slug);
+
+        // 0. Base Head & Core Dependencies Block (T123)
+        // Injects Tailwind CDN, Google Fonts, CSS custom properties, IMask, and Analytics
+        // before any other block renders to guarantee zero-FOUC and full style availability.
+        const baseHeadSnippet = this.buildBaseHeadSnippet({
+          preset: pagePreset,
+          theme,
+          hasForm: Boolean(sections.form),
+          analytics: page.analytics || (sections as any).analytics,
+          seo: {
+            title: page.title,
+            descr: page.descr || sections.hero?.descr || '',
+            faq: sections.faq,
+            pricing: sections.pricing,
+          },
+          customCss: sections.custom_css,
+        });
+
+        const baseRec = await this.client.addBlock(pageId, 'T123');
+        updateTasks.push(() =>
+          this.client.updateBlock(pageId, baseRec, {
+            code: baseHeadSnippet,
+            rawcod: baseHeadSnippet,
+          })
+        );
+        sectionsGenerated.push('base_head');
+
+        // 1. Header with unified Cross-Page Navigation (ME101)
         const headerRec = await this.client.addBlock(pageId, 'ME101');
-        const headerTitle = sections.header?.logo_text || pages[0]?.title || 'Site';
+        const defaultLogo = pages[0]?.title ? pages[0].title.split(/[—\-:]/)[0].trim() : 'Site';
+        const headerTitle = sections.header?.logo_text || defaultLogo;
         const headerBtnText = sections.header?.btn_text || 'Связаться';
-        const headerBtnHref = sections.header?.btn_href || '#form';
+        const headerBtnHref =
+          sections.header?.btn_href ||
+          (page.slug !== 'contact' && slugToUrl['contact'] ? slugToUrl['contact'] : '#form');
 
         const headerPayload: Record<string, string> = {
           title: headerTitle,
@@ -179,12 +255,14 @@ export class MultipageOrchestrator {
         updateTasks.push(() => this.client.updateBlock(pageId, headerRec, headerPayload));
         sectionsGenerated.push('header');
 
+        let isFirstContentSection = !sections.hero;
+
         // 2. Hero Section
         if (sections.hero) {
           const heroPackage = packageHeroSection(
             sections.hero,
             sections.hero.niche || 'telecom',
-            true,
+            false,
             pagePreset,
             {
               title: page.title,
@@ -203,6 +281,11 @@ export class MultipageOrchestrator {
         // 2b. Marquee
         if (sections.marquee) {
           const marqueePackage = packageMarqueeSection(sections.marquee.items, pagePreset);
+          if (isFirstContentSection) {
+            marqueePackage.fields.code = applyHeaderOffset(marqueePackage.fields.code);
+            marqueePackage.fields.rawcod = marqueePackage.fields.code;
+            isFirstContentSection = false;
+          }
           const marqueeRec = await this.client.addBlock(pageId, marqueePackage.tplId);
           updateTasks.push(() => this.client.updateBlock(pageId, marqueeRec, marqueePackage.fields));
           sectionsGenerated.push('marquee');
@@ -211,6 +294,11 @@ export class MultipageOrchestrator {
         // 3. Features
         if (sections.features) {
           const featPackage = packageFeaturesSection(sections.features, pagePreset);
+          if (isFirstContentSection) {
+            featPackage.fields.code = applyHeaderOffset(featPackage.fields.code);
+            featPackage.fields.rawcod = featPackage.fields.code;
+            isFirstContentSection = false;
+          }
           const featRec = await this.client.addBlock(pageId, featPackage.tplId);
           updateTasks.push(() => this.client.updateBlock(pageId, featRec, featPackage.fields));
           sectionsGenerated.push('features');
@@ -219,6 +307,11 @@ export class MultipageOrchestrator {
         // 3b. Timeline
         if (sections.timeline) {
           const timelinePackage = packageTimelineSection(sections.timeline, pagePreset);
+          if (isFirstContentSection) {
+            timelinePackage.fields.code = applyHeaderOffset(timelinePackage.fields.code);
+            timelinePackage.fields.rawcod = timelinePackage.fields.code;
+            isFirstContentSection = false;
+          }
           const timelineRec = await this.client.addBlock(pageId, timelinePackage.tplId);
           updateTasks.push(() => this.client.updateBlock(pageId, timelineRec, timelinePackage.fields));
           sectionsGenerated.push('timeline');
@@ -227,6 +320,11 @@ export class MultipageOrchestrator {
         // 4. Metrics
         if (sections.metrics) {
           const metrPackage = packageMetricsSection(sections.metrics, pagePreset);
+          if (isFirstContentSection) {
+            metrPackage.fields.code = applyHeaderOffset(metrPackage.fields.code);
+            metrPackage.fields.rawcod = metrPackage.fields.code;
+            isFirstContentSection = false;
+          }
           const metrRec = await this.client.addBlock(pageId, metrPackage.tplId);
           updateTasks.push(() => this.client.updateBlock(pageId, metrRec, metrPackage.fields));
           sectionsGenerated.push('metrics');
@@ -235,6 +333,11 @@ export class MultipageOrchestrator {
         // 4b. Calculator
         if (sections.calculator) {
           const calcPackage = packageCalculatorSection(sections.calculator, pagePreset);
+          if (isFirstContentSection) {
+            calcPackage.fields.code = applyHeaderOffset(calcPackage.fields.code);
+            calcPackage.fields.rawcod = calcPackage.fields.code;
+            isFirstContentSection = false;
+          }
           const calcRec = await this.client.addBlock(pageId, calcPackage.tplId);
           updateTasks.push(() => this.client.updateBlock(pageId, calcRec, calcPackage.fields));
           sectionsGenerated.push('calculator');
@@ -243,6 +346,11 @@ export class MultipageOrchestrator {
         // 5. Pricing
         if (sections.pricing) {
           const pricePackage = packagePricingSection(sections.pricing, pagePreset);
+          if (isFirstContentSection) {
+            pricePackage.fields.code = applyHeaderOffset(pricePackage.fields.code);
+            pricePackage.fields.rawcod = pricePackage.fields.code;
+            isFirstContentSection = false;
+          }
           const priceRec = await this.client.addBlock(pageId, pricePackage.tplId);
           updateTasks.push(() => this.client.updateBlock(pageId, priceRec, pricePackage.fields));
           sectionsGenerated.push('pricing');
@@ -264,11 +372,17 @@ export class MultipageOrchestrator {
             })
           );
           sectionsGenerated.push('testimonials');
+          isFirstContentSection = false;
         }
 
         // 7. FAQ
         if (sections.faq) {
           const faqPackage = packageFaqSection(sections.faq, pagePreset);
+          if (isFirstContentSection) {
+            faqPackage.fields.code = applyHeaderOffset(faqPackage.fields.code);
+            faqPackage.fields.rawcod = faqPackage.fields.code;
+            isFirstContentSection = false;
+          }
           const faqRec = await this.client.addBlock(pageId, faqPackage.tplId);
           updateTasks.push(() => this.client.updateBlock(pageId, faqRec, faqPackage.fields));
           sectionsGenerated.push('faq');
@@ -282,6 +396,11 @@ export class MultipageOrchestrator {
             pagePreset,
             (sections.form as any).success_message
           );
+          if (isFirstContentSection) {
+            formPackage.fields.code = applyHeaderOffset(formPackage.fields.code);
+            formPackage.fields.rawcod = formPackage.fields.code;
+            isFirstContentSection = false;
+          }
           const formRec = await this.client.addBlock(pageId, formPackage.tplId);
           updateTasks.push(() => this.client.updateBlock(pageId, formRec, formPackage.fields));
           sectionsGenerated.push('form');
@@ -390,12 +509,15 @@ export class MultipageOrchestrator {
     // Pass 2: Compile each page with cross-links
     for (const page of pages) {
       const pageSections = { ...page.sections };
+      const defaultLogo = pages[0]?.title ? pages[0].title.split(/[—\-:]/)[0].trim() : 'Site';
       pageSections.header = {
-        logo_text: pageSections.header?.logo_text || pages[0]?.title || 'Site',
+        logo_text: pageSections.header?.logo_text || defaultLogo,
         btn_text: pageSections.header?.btn_text || 'Связаться',
-        btn_href: pageSections.header?.btn_href || '#form',
+        btn_href: pageSections.header?.btn_href || slugToUrl['contact'] || '#form',
         menu_items: navItems,
       };
+
+      resolveCrossLinks(pageSections, slugToUrl, page.slug);
 
       const previewRes = buildLocalPreview({
         landingTitle: page.title,
@@ -424,6 +546,78 @@ export class MultipageOrchestrator {
       cross_linking_status: 'verified',
       total_elapsed_time_ms: Math.round(performance.now() - startTime),
     };
+  }
+
+  /**
+   * Generates monolithic Base Head HTML code for Block 0 injection:
+   * Tailwind CDN, Google Fonts, theme CSS variables, background styling, IMask, and Schema.org.
+   */
+  private buildBaseHeadSnippet(options: {
+    preset: StylePresetName;
+    theme: any;
+    hasForm: boolean;
+    analytics?: AnalyticsOptions;
+    seo?: any;
+    customCss?: string;
+  }): string {
+    const { preset, theme, hasForm, analytics, seo, customCss } = options;
+    const fontUrl =
+      theme.fontImportUrl ||
+      'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap';
+    const presetCss = getPresetCss(preset) || '';
+    const fullCss = [presetCss, customCss || ''].filter(Boolean).join('\n');
+
+    let snippet = `<!-- ========================================== -->
+<!-- Base Head Dependencies & Styles Layer (Block 0) -->
+<!-- ========================================== -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="${fontUrl}" rel="stylesheet">
+<style>
+  :root {
+    --card-radius: ${theme.radiusCard || '12px'};
+    --btn-radius: ${theme.radiusBtn || '8px'};
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body, #allrecords {
+    background-color: ${theme.bgPrimary || '#090D16'} !important;
+    color: ${theme.textPrimary || '#FFFFFF'} !important;
+  }
+  /* Header clearance guarantee */
+  .has-header-offset {
+    padding-top: 7rem !important;
+  }
+  @media (min-width: 640px) {
+    .has-header-offset {
+      padding-top: 8rem !important;
+    }
+  }
+  /* Tilda ME101 Nav Polish */
+  .t-menu-base {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+  }
+  ${fullCss}
+</style>
+`;
+
+    if (hasForm) {
+      snippet += `<script src="https://unpkg.com/imask"></script>\n`;
+    }
+
+    if (analytics) {
+      snippet += `${AnalyticsOrchestrator.generateAnalyticsSnippet(analytics)}\n`;
+    }
+
+    if (seo) {
+      snippet += `${SeoOrchestrator.generateJsonLd(seo)}\n`;
+    }
+
+    return snippet.trim();
   }
 
   private async runBatch<T>(tasks: (() => Promise<T>)[], batchSize = 3): Promise<T[]> {
