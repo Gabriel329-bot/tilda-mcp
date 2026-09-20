@@ -152,4 +152,22 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     expect(cleanData.pricing.amount).toBe(50000);
     expect(cleanData.pricing.note).toBe('Цена &amp; сроки &mdash; по договору');
   });
+
+  it('Scenario 6: Dark Preset Pricing CSS & Monolithic Template Mapping', async () => {
+    const { BLOCK_TEMPLATES } = await import('../src/driver/tilda-http-client.js');
+    const { DARK_PRESET_CSS, getPresetCss } = await import('../src/styles/presets.js');
+
+    // Verify template mappings
+    expect(BLOCK_TEMPLATES.PR04).toBe('776');
+    expect(BLOCK_TEMPLATES.PR01).toBe('776');
+    expect(BLOCK_TEMPLATES['776']).toBe('776');
+
+    // Verify dark CSS rules for pricing
+    const darkCss = getPresetCss('dark');
+    expect(darkCss).toContain('.t-pricing__features, .t-pricing__col, .t776__features');
+    expect(darkCss).toContain('background: transparent !important');
+    expect(darkCss).toContain('rgba(15, 23, 42, 0.75) !important');
+    expect(darkCss).toContain('color: #e2e8f0 !important');
+    expect(darkCss).toContain('margin-top: 24px !important');
+  });
 });

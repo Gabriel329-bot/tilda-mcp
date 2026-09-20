@@ -52,9 +52,12 @@ export const BLOCK_TEMPLATES: Record<string, string> = {
   FR402N: '1050',// Metrics / Numbers (FR402N)
   BF204: '678',  // Contact form (BF204N)
   BF204N: '678', // Contact form (BF204N)
-  PR01: '1072',  // Pricing cards (PL120N)
-  '301': '1072', // Pricing alias
-  PL120N: '1072',// Pricing cards
+  PR04: '776',   // Modern monolithic pricing cards (PR04 / T776)
+  '776': '776',  // Modern monolithic pricing cards
+  PR01: '776',   // Pricing cards (default to monolithic 776)
+  '301': '776',  // Pricing alias
+  '142': '142',  // Classic pricing table
+  PL120N: '1072',// Pricing cards (PL120N)
   '1072': '1072',// Pricing cards
   TS101: '533',  // Testimonials / Review cards in 3 columns (TS203)
   '441': '533',  // Testimonials alias
@@ -86,10 +89,10 @@ export function sanitizeString(val: string): string {
     .replace(/\t/g, ' ')          // tabs to spaces
     .replace(/«/g, '&laquo;')     // left guillemet
     .replace(/»/g, '&raquo;')     // right guillemet
-    .replace(/"/g, '&ldquo;')     // left double curly quote
-    .replace(/"/g, '&rdquo;')     // right double curly quote
-    .replace(/'/g, '&lsquo;')     // left single curly quote
-    .replace(/'/g, '&rsquo;')     // right single curly quote
+    .replace(/“/g, '&ldquo;')     // left double curly quote
+    .replace(/”/g, '&rdquo;')     // right double curly quote
+    .replace(/‘/g, '&lsquo;')     // left single curly quote
+    .replace(/’/g, '&rsquo;')     // right single curly quote
     .replace(/—/g, '&mdash;')     // em dash
     .replace(/–/g, '&ndash;')     // en dash
     .replace(/&(?!(?:[a-zA-Z]+|#\d+|#x[0-9a-fA-F]+);)/g, '&amp;') // bare ampersands only (skip existing entities)
@@ -828,7 +831,7 @@ export class TildaHttpClient {
       !!imgVal ||
       (!!fields.title && !!fields.buttontitle && !!fields.buttontitle2);
     const isForm = tplId === '678' || fields.inputs !== undefined || fields.forminputs !== undefined;
-    const isPricing = tplId === '1072' || tplId === '301';
+    const isPricing = tplId === '776' || tplId === '1072' || tplId === '301' || tplId === '142';
     const isReviews = tplId === '533' || tplId === '441' || tplId === '605';
     const isListOrCards =
       tplId === '491' ||

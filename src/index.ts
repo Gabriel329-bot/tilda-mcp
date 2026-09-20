@@ -3,7 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { TildaHttpClient } from './driver/tilda-http-client.js';
 import { performance } from 'perf_hooks';
-import { STYLE_PRESETS, StylePresetName } from './styles/presets.js';
+import { STYLE_PRESETS, StylePresetName, DARK_PRESET_CSS } from './styles/presets.js';
 
 // Initialize MCP Server
 const server = new McpServer({
@@ -25,7 +25,7 @@ export const SECTION_TPL_MAP: Record<string, string[]> = {
   hero: ['205', '204', '18'],
   features: ['491'],
   metrics: ['1050'],
-  pricing: ['1072', '301'],
+  pricing: ['776', '1072', '301', '142'],
   testimonials: ['533', '605', '441'],
   faq: ['585', '746'],
   form: ['678'],
@@ -55,7 +55,8 @@ server.tool(
   {
     projectId: z.string().optional().describe('Tilda project ID'),
     pageId: z.string().optional().describe('Target page ID (created if omitted)'),
-    landingTitle: z.string().optional().default('Landing Page').describe('Page title'),
+    landingTitle: z.string().optional().describe('Page title'),
+    title: z.string().optional().describe('Alias for landingTitle'),
     style_preset: z.enum(['dark', 'minimal', 'warm']).default('minimal').optional().describe('Color preset: dark, minimal, warm'),
     safeMode: z.boolean().optional().default(true).describe('Human-like pacing delays'),
     custom_css: z.string().optional().describe('Custom CSS/HTML for T123 embed'),
@@ -83,6 +84,18 @@ server.tool(
         btn_href: z.string().optional(),
         btn2_text: z.string().optional(),
         btn2_href: z.string().optional(),
+        btn1: z
+          .object({
+            text: z.string(),
+            href: z.string().optional(),
+          })
+          .optional(),
+        btn2: z
+          .object({
+            text: z.string(),
+            href: z.string().optional(),
+          })
+          .optional(),
         bg_image_url: z.string().optional().describe('Cover background image URL'),
         niche: z.enum(['interior', 'auto', 'it', 'food']).optional().describe('Niche preset for background'),
       }),
@@ -174,12 +187,13 @@ server.tool(
         .object({
           title: z.string().optional(),
           descr: z.string().optional(),
+          text: z.string().optional(),
         })
         .optional(),
       custom_css: z.string().optional(),
     }),
   },
-  async ({ projectId, pageId, landingTitle, style_preset, safeMode, custom_css, sections }) => {
+  async ({ projectId, pageId, landingTitle, title, style_preset, safeMode, custom_css, sections }) => {
     try {
       const startTime = performance.now();
       const client = new TildaHttpClient({ humanLikePacing: safeMode });
@@ -191,11 +205,12 @@ server.tool(
 
       let targetPageId = pageId;
       let isNewlyCreated = false;
+      const effectiveTitle = landingTitle || title || 'Landing Page';
       if (!targetPageId) {
         if (!projectId) {
           throw new Error('Either pageId or projectId must be provided.');
         }
-        targetPageId = await client.createPage(projectId, landingTitle);
+        targetPageId = await client.createPage(projectId, effectiveTitle);
         isNewlyCreated = true;
       }
 
@@ -252,14 +267,19 @@ server.tool(
 
       // 2. Hero (CR30 / CR16 - tplId 205)
       const heroRec = await client.addBlock(targetPageId, 'CR30');
+      const heroBtn1Title = sections.hero.btn1?.text || sections.hero.btn_text;
+      const heroBtn1Link = sections.hero.btn1?.href || sections.hero.btn_href || '#form';
+      const heroBtn2Title = sections.hero.btn2?.text || sections.hero.btn2_text;
+      const heroBtn2Link = sections.hero.btn2?.href || sections.hero.btn2_href || '#features';
+
       updateTasks.push(() =>
         client.updateBlock(targetPageId, heroRec, {
           title: sections.hero.title,
           descr: sections.hero.descr,
-          buttontitle: sections.hero.btn_text,
-          buttonlink: sections.hero.btn_href || '#form',
-          buttontitle2: sections.hero.btn2_text,
-          buttonlink2: sections.hero.btn2_href || '#features',
+          buttontitle: heroBtn1Title,
+          buttonlink: heroBtn1Link,
+          buttontitle2: heroBtn2Title,
+          buttonlink2: heroBtn2Link,
           img: bgImg,
           bgimg: bgImg,
           title_color: theme.textPrimary,
@@ -451,7 +471,7 @@ server.tool(
         updateTasks.push(() =>
           client.updateBlock(targetPageId, footRec, {
             title: sections.footer!.title || '',
-            descr: sections.footer!.descr || '',
+            descr: sections.footer!.descr || sections.footer!.text || '',
             bg_color: sections.faq ? theme.bgSecondary : theme.bgPrimary,
             title_color: theme.textPrimary,
             descr_color: theme.textSecondary,
@@ -465,67 +485,11 @@ server.tool(
       }
 
       // 10. Auto-CSS / Custom CSS Embed (T123 - tplId 131)
-      const darkNeonCss = `<style>
-  /* Glassmorphism для карточек */
-  .t-card__col, .t-col, .t1072__content, .t533__col {
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
-  }
-  /* Стилизация карточек тарифов (1072) */
-  .t1072__content {
-    background: rgba(16, 20, 30, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 16px !important;
-    overflow: hidden !important;
-  }
-  .t1072__header {
-    background: rgba(22, 25, 34, 0.8) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  }
-  .t1072__featured .t1072__header {
-    background: rgba(0, 245, 255, 0.15) !important;
-    border-bottom: 1px solid rgba(0, 245, 255, 0.3) !important;
-  }
-  .t1072__featured .t-card__title {
-    color: #00F5FF !important;
-  }
-  .t1072__footer {
-    background: transparent !important;
-  }
-  /* Стилизация карточек отзывов (533) */
-  .t533__wrapper {
-    background: rgba(22, 25, 34, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 16px !important;
-    padding: 30px !important;
-    backdrop-filter: blur(16px) !important;
-  }
-  /* Неоновое свечение кнопок */
-  .t-btn:not(.t-btnflex_type_button2), .t-submit {
-    box-shadow: 0 0 25px rgba(0, 245, 255, 0.45) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  }
-  .t-btn:hover:not(.t-btnflex_type_button2), .t-submit:hover {
-    transform: translateY(-2px) scale(1.02) !important;
-    box-shadow: 0 0 35px rgba(0, 245, 255, 0.7) !important;
-  }
-  /* Стеклянные поля формы */
-  .t-input {
-    backdrop-filter: blur(10px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    color: #FFFFFF !important;
-  }
-  .t-input:focus {
-    border-color: #00F5FF !important;
-    box-shadow: 0 0 15px rgba(0, 245, 255, 0.3) !important;
-  }
-</style>`;
-
       let cssCode = custom_css || sections.custom_css;
       if (!cssCode && presetKey === 'dark') {
-        cssCode = darkNeonCss;
-      } else if (cssCode && presetKey === 'dark' && !cssCode.includes('backdrop-filter')) {
-        cssCode = `${darkNeonCss}\n${cssCode}`;
+        cssCode = DARK_PRESET_CSS;
+      } else if (cssCode && presetKey === 'dark' && !cssCode.includes('t-pricing__features')) {
+        cssCode = `${DARK_PRESET_CSS}\n${cssCode}`;
       }
 
       if (cssCode) {
