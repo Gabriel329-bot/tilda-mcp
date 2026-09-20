@@ -110,9 +110,16 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error('Network failure during rollback'));
     global.fetch = fetchMock;
 
+    const deletePromise = client.deletePage('99998888');
+
+    // Advance timers across all retry attempts (1000ms + 2500ms)
+    await vi.advanceTimersByTimeAsync(1000);
+    await vi.advanceTimersByTimeAsync(2500);
+
     // Must not throw, returns false safely
-    const deleted = await client.deletePage('99998888');
+    const deleted = await deletePromise;
     expect(deleted).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 
   it('Scenario 5: Sanitizer Unit Tests (sanitizeString and sanitizeFields)', () => {
