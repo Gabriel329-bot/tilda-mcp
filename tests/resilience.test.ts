@@ -374,6 +374,43 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     expect(footerPkg.fields.code).toContain('bg-[#0B0F17]');
     expect(footerPkg.fields.rawcod).toBe(footerPkg.fields.code);
   });
+
+  it('Scenario 11: Light Preset & Studio Components (Apple Style)', async () => {
+    const { getThemeTokens } = await import('../src/templates/theme-tokens.js');
+    const { packageHeroSection, packageContactSection, packageFooterSection } = await import('../src/builder/block-packager.js');
+
+    const lightTheme = getThemeTokens('light');
+    expect(lightTheme.isDark).toBe(false);
+    expect(lightTheme.accent).toBe('#0071E3');
+    expect(lightTheme.radiusCard).toBe('rounded-2xl');
+    expect(lightTheme.radiusBtn).toBe('rounded-full');
+    expect(lightTheme.bgPage).toBe('bg-[#F5F5F7]');
+
+    // 1. Hero light
+    const heroPkg = packageHeroSection(
+      { title: 'Design Platform', descr: 'Next generation design system' },
+      'tech',
+      false,
+      'light'
+    );
+    expect(heroPkg.fields.code).toContain('bg-gradient-to-b from-white');
+    expect(heroPkg.fields.code).toContain('text-[#1D1D1F]');
+    expect(heroPkg.fields.code).toContain('rounded-full');
+    expect(heroPkg.fields.code).not.toContain('bg-black/80');
+
+    // 2. Contact form light
+    const contactPkg = packageContactSection({ title: 'Получить доступ' }, undefined, 'light');
+    expect(contactPkg.fields.code).toContain('bg-[#F5F5F7]');
+    expect(contactPkg.fields.code).toContain('bg-white');
+    expect(contactPkg.fields.code).toContain('text-[#1D1D1F]');
+    expect(contactPkg.fields.code).toContain('bg-slate-50 border border-slate-200');
+
+    // 3. Footer light
+    const footPkg = packageFooterSection('Design Studio', 'light');
+    expect(footPkg.fields.code).toContain('bg-[#ECECEE]');
+    expect(footPkg.fields.code).toContain('text-[#1D1D1F]');
+    expect(footPkg.fields.code).toContain('border-black/[0.06]');
+  });
 });
 
 

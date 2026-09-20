@@ -3,15 +3,23 @@ import { getIcon, ICONS } from '../templates/icons.js';
 import { ThemeTokens, getThemeTokens } from '../templates/theme-tokens.js';
 
 export function applyTokens(html: string, theme: ThemeTokens): string {
+  const bgPage = theme.bgPage || theme.bgPageLight || 'bg-white';
+  const bgCard = theme.bgCard || theme.bgCardLight || 'bg-[#F8FAFC]';
+  const border = theme.border || theme.borderLight || 'border-slate-200/80';
+  const textPrimary = theme.textPrimary || 'text-slate-900';
+  const textSecondary = theme.textSecondary || 'text-slate-500';
+
   return html
     .replace(/\{\{THEME_ACCENT\}\}/g, theme.accent)
     .replace(/\{\{THEME_ACCENT_HOVER\}\}/g, theme.accentHover)
     .replace(/\{\{THEME_ACCENT_GLOW\}\}/g, theme.accentGlow)
     .replace(/\{\{THEME_RADIUS_CARD\}\}/g, theme.radiusCard)
     .replace(/\{\{THEME_RADIUS_BTN\}\}/g, theme.radiusBtn)
-    .replace(/\{\{THEME_BG_PAGE\}\}/g, theme.bgPageLight)
-    .replace(/\{\{THEME_BG_CARD\}\}/g, theme.bgCardLight)
-    .replace(/\{\{THEME_BORDER\}\}/g, theme.borderLight)
+    .replace(/\{\{THEME_BG_PAGE\}\}/g, bgPage)
+    .replace(/\{\{THEME_BG_CARD\}\}/g, bgCard)
+    .replace(/\{\{THEME_BORDER\}\}/g, border)
+    .replace(/\{\{THEME_TEXT_PRIMARY\}\}/g, textPrimary)
+    .replace(/\{\{THEME_TEXT_SECONDARY\}\}/g, textSecondary)
     .replace(/\{\{THEME_FONT\}\}/g, theme.fontFamily);
 }
 
@@ -31,14 +39,17 @@ function resolveTheme(theme?: ThemeTokens | string, data?: any): ThemeTokens {
 export class TemplateEngine {
   static renderHero(data: any, bgImage: string, theme?: ThemeTokens | string): string {
     const activeTheme = resolveTheme(theme, data);
-    const html = TEMPLATES.hero
+    const isLight = !activeTheme.isDark || activeTheme.id === 'light' || activeTheme.id === 'apple';
+    const template = isLight ? TEMPLATES.heroLight : TEMPLATES.hero;
+
+    const html = template
       .replace('{{BG_IMAGE}}', bgImage)
-      .replace('{{BADGE}}', data.badge || 'ИНЖЕНЕРНЫЙ ЦЕНТР')
+      .replace('{{BADGE}}', data.badge || (isLight ? 'Apple Ecosystem' : 'ИНЖЕНЕРНЫЙ ЦЕНТР'))
       .replace('{{TITLE}}', data.title || '')
       .replace('{{SUBTITLE}}', data.descr || data.subtitle || '')
-      .replace('{{BTN1_TEXT}}', data.btn1?.text || data.btn_text || 'Выбрать профиль')
-      .replace('{{BTN1_HREF}}', data.btn1?.href || data.btn_href || '#features')
-      .replace('{{BTN2_TEXT}}', data.btn2?.text || data.btn2_text || 'Условия приема')
+      .replace('{{BTN1_TEXT}}', data.btn1?.text || data.btn_text || 'Начать бесплатно')
+      .replace('{{BTN1_HREF}}', data.btn1?.href || data.btn_href || '#form')
+      .replace('{{BTN2_TEXT}}', data.btn2?.text || data.btn2_text || (isLight ? 'Узнать больше' : 'Условия приема'))
       .replace('{{BTN2_HREF}}', data.btn2?.href || data.btn2_href || '#pricing');
 
     return applyTokens(html, activeTheme);
@@ -136,30 +147,34 @@ export class TemplateEngine {
 
   static renderContact(data: any, webhookUrl?: string, theme?: ThemeTokens | string): string {
     const activeTheme = resolveTheme(theme, data);
-    const badge = data.badge || 'Контакты и связь';
+    const isLight = !activeTheme.isDark || activeTheme.id === 'light' || activeTheme.id === 'apple';
+    const template = isLight ? TEMPLATES.contactSectionLight : TEMPLATES.contactSection;
+
+    const badge = data.badge || (isLight ? 'Связаться с нами' : 'Контакты и связь');
+    const contactsBadgeBg = isLight ? 'bg-white border border-black/[0.06] shadow-sm' : 'bg-white/5';
     const contactsHtml = data.contacts
       ? data.contacts.map((c: any) => `
         <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[${activeTheme.accent}]">${c.icon || '•'}</span>
+          <span class="w-8 h-8 rounded-full ${contactsBadgeBg} flex items-center justify-center text-[${activeTheme.accent}]">${c.icon || '•'}</span>
           <span>${c.text}</span>
         </div>
       `).join('')
       : `
         <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[${activeTheme.accent}]">📍</span>
-          <span>${data.address || 'Офис разработки & Cloud HQ'}</span>
+          <span class="w-8 h-8 rounded-full ${contactsBadgeBg} flex items-center justify-center text-[${activeTheme.accent}]">📍</span>
+          <span>${data.address || 'Офис разработки & Design HQ'}</span>
         </div>
         <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[${activeTheme.accent}]">📞</span>
+          <span class="w-8 h-8 rounded-full ${contactsBadgeBg} flex items-center justify-center text-[${activeTheme.accent}]">📞</span>
           <span>${data.phone || '+7 (495) 800-20-40'}</span>
         </div>
         <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[${activeTheme.accent}]">✉️</span>
-          <span>${data.email || 'support@devtools.cloud'}</span>
+          <span class="w-8 h-8 rounded-full ${contactsBadgeBg} flex items-center justify-center text-[${activeTheme.accent}]">✉️</span>
+          <span>${data.email || 'support@studio.cloud'}</span>
         </div>
       `;
 
-    const html = TEMPLATES.contactSection
+    const html = template
       .replace('{{BADGE}}', badge)
       .replace('{{TITLE}}', data.title || 'Связаться с нами')
       .replace('{{DESCR}}', data.descr || '')
@@ -172,8 +187,10 @@ export class TemplateEngine {
 
   static renderFooter(projectName: string, theme?: ThemeTokens | string): string {
     const activeTheme = resolveTheme(theme);
+    const isLight = !activeTheme.isDark || activeTheme.id === 'light' || activeTheme.id === 'apple';
+    const template = isLight ? TEMPLATES.footerSectionLight : TEMPLATES.footerSection;
     const year = new Date().getFullYear().toString();
-    const html = TEMPLATES.footerSection
+    const html = template
       .replace(/\{\{PROJECT_NAME\}\}/g, projectName || 'DevTools Cloud')
       .replace(/\{\{YEAR\}\}/g, year);
 

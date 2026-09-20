@@ -70,10 +70,10 @@ server.tool(
     landingTitle: z.string().optional().describe('Page title'),
     title: z.string().optional().describe('Alias for landingTitle'),
     style_preset: z
-      .enum(['dark', 'minimal', 'warm', 'dji', 'linear', 'apple'])
+      .enum(['dark', 'minimal', 'warm', 'dji', 'linear', 'apple', 'light'])
       .default('minimal')
       .optional()
-      .describe('Color preset: dark, minimal, warm, dji, linear, apple'),
+      .describe('Color preset: dark, minimal, warm, dji, linear, apple, light'),
     safeMode: z.boolean().optional().default(true).describe('Human-like pacing delays'),
     custom_css: z.string().optional().describe('Custom CSS/HTML for T123 embed'),
     sections: z.object({
@@ -493,7 +493,7 @@ server.tool(
       ])
       .describe('Section name to update'),
     recordId: z.string().optional().describe('Direct record ID (auto-resolved if omitted)'),
-    style_preset: z.enum(['dark', 'minimal', 'warm', 'dji', 'linear', 'apple']).optional().describe('Style preset override'),
+    style_preset: z.enum(['dark', 'minimal', 'warm', 'dji', 'linear', 'apple', 'light']).optional().describe('Style preset override'),
     content: z.record(z.any()).describe('Fields to update in the section'),
     publish: z.boolean().optional().default(true).describe('Republish page after update'),
   },

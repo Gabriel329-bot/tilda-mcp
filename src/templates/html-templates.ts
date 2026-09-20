@@ -31,6 +31,35 @@ export const TEMPLATES = {
 </div>
 `,
 
+  // 1b. HERO LIGHT BLOCK (Студийный светлый фон, угольный заголовок, белые пилюли и кнопки)
+  heroLight: `
+<div class="relative w-full min-h-[85vh] flex items-center justify-center bg-gradient-to-b from-white via-[#F5F5F7] to-[#F5F5F7] overflow-hidden {{THEME_FONT}} border-b border-black/[0.06]">
+  <div class="relative z-10 max-w-5xl mx-auto px-6 py-28 text-center flex flex-col items-center">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 {{THEME_RADIUS_BTN}} bg-white/80 border border-black/[0.08] shadow-sm text-[{{THEME_ACCENT}}] text-xs font-semibold tracking-wider uppercase mb-8 backdrop-blur-md">
+      <span class="w-2 h-2 rounded-full bg-[{{THEME_ACCENT}}] animate-pulse"></span>
+      {{BADGE}}
+    </div>
+    
+    <h1 class="text-5xl sm:text-7xl font-bold tracking-tight text-[#1D1D1F] mb-6 leading-[1.08] max-w-4xl">
+      {{TITLE}}
+    </h1>
+    
+    <p class="text-lg sm:text-xl text-slate-600 max-w-2xl mb-10 leading-relaxed font-normal">
+      {{SUBTITLE}}
+    </p>
+    
+    <div class="flex flex-wrap items-center justify-center gap-4">
+      <a href="{{BTN1_HREF}}" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer">
+        {{BTN1_TEXT}}
+      </a>
+      <a href="{{BTN2_HREF}}" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-white hover:bg-slate-50 text-slate-900 border border-black/[0.1] shadow-sm font-medium text-sm transition-all duration-200 cursor-pointer">
+        {{BTN2_TEXT}}
+      </a>
+    </div>
+  </div>
+</div>
+`,
+
   // 2. BENTO FEATURES GRID (Подложка страницы, мягкие подложки карточек, настраиваемый радиус, SVG иконки, hover-эффект)
   bentoContainer: `
 <section id="features" class="w-full py-24 {{THEME_BG_PAGE}} {{THEME_FONT}}">
@@ -63,7 +92,7 @@ export const TEMPLATES = {
 
   // 3. METRICS SECTION (Монохромные черные цифры, никаких синих заголовков)
   metricsContainer: `
-<section id="metrics" class="w-full py-20 bg-slate-50 border-y {{THEME_BORDER}} {{THEME_FONT}}">
+<section id="metrics" class="w-full py-20 {{THEME_BG_PAGE}} border-y {{THEME_BORDER}} {{THEME_FONT}}">
   <div class="max-w-7xl mx-auto px-6">
     <div class="text-center max-w-2xl mx-auto mb-12">
       <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">{{SECTION_TITLE}}</h2>
@@ -77,7 +106,7 @@ export const TEMPLATES = {
 `,
 
   metricItem: `
-<div class="p-6 {{THEME_RADIUS_CARD}} bg-white border {{THEME_BORDER}} text-center shadow-sm">
+<div class="p-6 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} text-center shadow-sm">
   <div class="text-4xl sm:text-5xl font-extrabold text-slate-950 tracking-tight mb-2">{{VALUE}}</div>
   <div class="text-xs sm:text-sm font-medium text-slate-500 leading-snug">{{LABEL}}</div>
 </div>
@@ -226,6 +255,113 @@ async function handleLeadSubmit(event) {
 </script>
 `,
 
+  // 5b. CONTACT / FORM SECTION LIGHT (Светлая подложка, белоснежная карточка, аккуратные инпуты)
+  contactSectionLight: `
+<style>html { scroll-behavior: smooth; }</style>
+<script src="https://unpkg.com/imask" onload="initLeadPhoneMask()"></script>
+<section id="form" class="w-full py-24 bg-[#F5F5F7] text-slate-900 {{THEME_FONT}} border-t border-black/[0.06]">
+  <div class="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+    <div>
+      <div class="inline-flex items-center gap-2 px-3 py-1 {{THEME_RADIUS_BTN}} bg-white border border-black/[0.08] shadow-sm text-[{{THEME_ACCENT}}] text-xs font-semibold uppercase tracking-wider mb-6">
+        {{BADGE}}
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-[#1D1D1F]">
+        {{TITLE}}
+      </h2>
+      <p class="text-slate-600 text-base leading-relaxed mb-8">
+        {{DESCR}}
+      </p>
+      <div class="space-y-4 text-sm text-slate-700">
+        {{CONTACTS_LIST}}
+      </div>
+    </div>
+
+    <div id="lead-form-container" class="p-8 {{THEME_RADIUS_CARD}} bg-white border border-black/[0.08] shadow-sm">
+      <form id="lead-form" onsubmit="handleLeadSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1.5">Ваше имя</label>
+          <input type="text" name="name" required placeholder="Константин" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1.5">Номер телефона</label>
+          <input type="tel" id="lead-phone" name="phone" required placeholder="+7 (___) ___-__-__" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-500 mb-1.5">Email для обратной связи</label>
+          <input type="email" name="email" required placeholder="name@domain.com" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+        </div>
+        <button type="submit" class="w-full h-12 mt-2 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer">
+          {{BTN_TEXT}}
+        </button>
+        <p class="text-[11px] text-slate-400 text-center mt-3">
+          Нажимая кнопку, вы соглашаетесь на обработку персональных данных.
+        </p>
+      </form>
+    </div>
+  </div>
+</section>
+<script>
+function initLeadPhoneMask() {
+  var phoneEl = document.getElementById('lead-phone');
+  if (phoneEl && typeof IMask !== 'undefined') {
+    IMask(phoneEl, { mask: '+{7} (000) 000-00-00' });
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLeadPhoneMask);
+} else {
+  initLeadPhoneMask();
+}
+
+async function handleLeadSubmit(event) {
+  event.preventDefault();
+  var form = event.target;
+  var btn = form.querySelector('button[type="submit"]');
+  var originalBtnText = btn.innerHTML;
+  btn.innerHTML = '<span class="animate-spin inline-block mr-2">⏳</span> Отправка...';
+  btn.disabled = true;
+
+  try {
+    var webhook = '{{WEBHOOK_URL}}';
+    if (webhook && webhook !== '{{WEBHOOK_URL}}' && webhook.startsWith('http')) {
+      var formData = new FormData(form);
+      var payload = Object.fromEntries(formData.entries());
+      await fetch(webhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await new Promise(function(r) { setTimeout(r, 800); });
+    }
+
+    var container = document.getElementById('lead-form-container');
+    if (container) {
+      container.innerHTML = \`
+        <div class="py-8 px-4 text-center flex flex-col items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <h3 class="text-2xl font-bold text-[#1D1D1F] mb-2 tracking-tight">Заявка принята!</h3>
+          <p class="text-sm text-slate-500 max-w-sm mb-8 leading-relaxed">
+            Менеджер свяжется с вами в ближайшее время по указанному номеру телефона.
+          </p>
+          <button type="button" onclick="location.reload()" class="inline-flex items-center justify-center px-6 h-11 {{THEME_RADIUS_BTN}} bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium text-sm transition-all duration-200 border border-slate-200 cursor-pointer">
+            Отправить еще одну
+          </button>
+        </div>
+      \`;
+    }
+  } catch (err) {
+    console.error('Lead submit error:', err);
+    btn.innerHTML = originalBtnText;
+    btn.disabled = false;
+    alert('Произошла ошибка при отправке заявки. Пожалуйста, попробуйте снова.');
+  }
+}
+</script>
+`,
+
   // 6. FAQ ACCORDION (Интерактивный нативный аккордеон с SVG-стрелками и плавной анимацией)
   faqContainer: `
 <section id="faq" class="w-full py-20 {{THEME_BG_PAGE}} {{THEME_FONT}} border-t {{THEME_BORDER}}">
@@ -266,6 +402,22 @@ async function handleLeadSubmit(event) {
     
     <div class="text-xs text-slate-500 text-center sm:text-right">
       © {{YEAR}} {{PROJECT_NAME}}. Все права защищены. High-performance infrastructure.
+    </div>
+  </div>
+</footer>
+`,
+
+  // 7b. FOOTER SECTION LIGHT (Светлый подвал, угольный логотип, мягкая подложка)
+  footerSectionLight: `
+<footer class="w-full py-12 bg-[#ECECEE] text-slate-600 {{THEME_FONT}} border-t border-black/[0.06]">
+  <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+    <div class="flex items-center gap-3">
+      <span class="text-lg font-bold tracking-tight text-[#1D1D1F]">{{PROJECT_NAME}}</span>
+      <span class="text-xs px-2 py-0.5 rounded bg-white border border-black/[0.08] text-slate-600 font-mono shadow-sm">v2.4</span>
+    </div>
+    
+    <div class="text-xs text-slate-500 text-center sm:text-right">
+      © {{YEAR}} {{PROJECT_NAME}}. Все права защищены. High-performance platform.
     </div>
   </div>
 </footer>

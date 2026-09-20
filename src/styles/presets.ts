@@ -1,4 +1,4 @@
-export type StylePresetName = 'dark' | 'minimal' | 'warm' | 'dji' | 'linear' | 'apple';
+export type StylePresetName = 'dark' | 'minimal' | 'warm' | 'dji' | 'linear' | 'apple' | 'light';
 
 export interface ColorTheme {
   bgPrimary: string;
@@ -57,7 +57,17 @@ export const STYLE_PRESETS: Record<StylePresetName, ColorTheme> = {
     cardBg: '#FFFFFF',
   },
   apple: {
-    bgPrimary: '#000000',
+    bgPrimary: '#FFFFFF',
+    bgSecondary: '#F5F5F7',
+    textPrimary: '#1D1D1F',
+    textSecondary: '#86868B',
+    accentBtnBg: '#0071E3',
+    accentBtnText: '#FFFFFF',
+    accentBadge: '#0071E3',
+    cardBg: '#FFFFFF',
+  },
+  light: {
+    bgPrimary: '#FFFFFF',
     bgSecondary: '#F5F5F7',
     textPrimary: '#1D1D1F',
     textSecondary: '#86868B',
