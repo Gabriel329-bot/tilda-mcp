@@ -51,8 +51,8 @@ export class TemplateEngine {
       .replace('{{BADGE}}', data.badge || (isLight ? 'Apple Ecosystem' : 'ИНЖЕНЕРНЫЙ ЦЕНТР'))
       .replace('{{TITLE}}', data.title || '')
       .replace('{{SUBTITLE}}', data.descr || data.subtitle || '')
-      .replace('{{BTN1_TEXT}}', data.btn1?.text || data.btn_text || 'Начать бесплатно')
-      .replace('{{BTN1_HREF}}', data.btn1?.href || data.btn_href || '#form')
+      .replace('{{BTN1_TEXT}}', data.btn1?.text || data.btn1_text || data.btn_text || 'Начать бесплатно')
+      .replace('{{BTN1_HREF}}', data.btn1?.href || data.btn1_href || data.btn_href || '#form')
       .replace('{{BTN2_TEXT}}', data.btn2?.text || data.btn2_text || (isLight ? 'Узнать больше' : 'Условия приема'))
       .replace('{{BTN2_HREF}}', data.btn2?.href || data.btn2_href || '#pricing');
 
@@ -61,7 +61,8 @@ export class TemplateEngine {
 
   static renderBento(data: any, theme?: ThemeTokens | string): string {
     const activeTheme = resolveTheme(theme, data);
-    const cards = (data.items || []).map((item: any) => {
+    const rawCards = data.cards || data.items || [];
+    const cards = rawCards.map((item: any) => {
       return TEMPLATES.bentoCard
         .replace('{{ICON_SVG}}', getIcon(item.title))
         .replace('{{TITLE}}', item.title || '')
@@ -270,7 +271,7 @@ export class TemplateEngine {
     const stepsData = data?.steps && data.steps.length > 0 ? data.steps : defaultSteps;
     const stepsHtml = stepsData
       .map((step: any, idx: number) => {
-        const stepNum = step.step || step.step_num || (idx + 1).toString().padStart(2, '0');
+        const stepNum = step.num || step.step || step.step_num || (idx + 1).toString().padStart(2, '0');
         return TEMPLATES.timelineStep
           .replace('{{STEP_NUM}}', String(stepNum))
           .replace('{{STEP_TITLE}}', step.title || '')

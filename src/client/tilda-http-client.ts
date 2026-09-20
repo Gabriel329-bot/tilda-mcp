@@ -497,6 +497,13 @@ export class TildaHttpClient {
   }
 
   /**
+   * Initializes client and verifies authentication session.
+   */
+  public async init(): Promise<void> {
+    await this.checkAuth();
+  }
+
+  /**
    * Creates a new blank page in the specified project via direct HTTP POST.
    * Uses template ID 1231 (Tilda's native blank page template).
    * If title is provided, saves page title via comm: "savepagetitle".

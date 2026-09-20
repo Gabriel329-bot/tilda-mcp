@@ -75,6 +75,10 @@ export class MultipageOrchestrator {
    * Pass 2 (Cross-Linking & Assembly): Builds all page sections with injected cross-links and publishes.
    * Rollback: If any error occurs, automatically deletes all pages created in this session.
    */
+  public async generateMultipageSite(config: MultipageSiteConfig): Promise<MultipageSiteReport> {
+    return this.generateSite(config);
+  }
+
   public async generateSite(config: MultipageSiteConfig): Promise<MultipageSiteReport> {
     const startTime = performance.now();
     const {
