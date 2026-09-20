@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { TildaHttpClient, sanitizeString, sanitizeFields } from '../src/driver/tilda-http-client.js';
+import { TildaHttpClient, sanitizeString, sanitizeFields } from '../src/client/tilda-http-client.js';
 
 describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
   let client: TildaHttpClient;
@@ -154,7 +154,7 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
   });
 
   it('Scenario 6: Dark Preset Pricing CSS & Monolithic Template Mapping', async () => {
-    const { BLOCK_TEMPLATES } = await import('../src/driver/tilda-http-client.js');
+    const { BLOCK_TEMPLATES } = await import('../src/client/tilda-http-client.js');
     const { DARK_PRESET_CSS, getPresetCss } = await import('../src/styles/presets.js');
 
     // Verify template mappings
@@ -215,7 +215,7 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     const { ICONS, getIcon } = await import('../src/templates/icons.js');
     const { TemplateEngine } = await import('../src/generators/template-engine.js');
     const { packageHeroSection, packageFeaturesSection, packageMetricsSection, packagePricingSection } =
-      await import('../src/builder/block-packager.js');
+      await import('../src/generators/block-packager.js');
 
     // 1. Icons dictionary
     expect(ICONS.server).toContain('<svg');
@@ -272,7 +272,7 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     expect(pricePkg.fields.code).toContain(ICONS.check);
 
     // 6. Contact section rendering
-    const { packageContactSection, packageFaqSection } = await import('../src/builder/block-packager.js');
+    const { packageContactSection, packageFaqSection } = await import('../src/generators/block-packager.js');
     const contactPkg = packageContactSection({
       title: 'Запись на визит',
       descr: 'Оставьте контактные данные',
@@ -305,7 +305,7 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
   it('Scenario 9: Dynamic Theme Switcher & Design Tokens (dji, dark, linear)', async () => {
     const { getThemeTokens, THEMES } = await import('../src/templates/theme-tokens.js');
     const { TemplateEngine } = await import('../src/generators/template-engine.js');
-    const { packageHeroSection, packagePricingSection } = await import('../src/builder/block-packager.js');
+    const { packageHeroSection, packagePricingSection } = await import('../src/generators/block-packager.js');
 
     // 1. Theme token definitions
     expect(THEMES.dji.accent).toBe('#0070D5');
@@ -356,7 +356,7 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
 
   it('Scenario 10: Custom Studio Footer Section (T123)', async () => {
     const { TemplateEngine } = await import('../src/generators/template-engine.js');
-    const { packageFooterSection } = await import('../src/builder/block-packager.js');
+    const { packageFooterSection } = await import('../src/generators/block-packager.js');
 
     // 1. TemplateEngine.renderFooter
     const footerHtml = TemplateEngine.renderFooter('DevTools Cloud');
@@ -377,7 +377,7 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
 
   it('Scenario 11: Light Preset & Studio Components (Apple Style)', async () => {
     const { getThemeTokens } = await import('../src/templates/theme-tokens.js');
-    const { packageHeroSection, packageContactSection, packageFooterSection } = await import('../src/builder/block-packager.js');
+    const { packageHeroSection, packageContactSection, packageFooterSection } = await import('../src/generators/block-packager.js');
 
     const lightTheme = getThemeTokens('light');
     expect(lightTheme.isDark).toBe(false);

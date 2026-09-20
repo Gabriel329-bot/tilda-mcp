@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { TildaHttpClient } from './driver/tilda-http-client.js';
+import { TildaHttpClient } from './client/tilda-http-client.js';
 import { performance } from 'perf_hooks';
 import { STYLE_PRESETS, StylePresetName, DARK_PRESET_CSS, DJI_PRESET_CSS, getPresetCss } from './styles/presets.js';
 
@@ -13,7 +13,7 @@ import {
   packageContactSection,
   packageFaqSection,
   packageFooterSection,
-} from './builder/block-packager.js';
+} from './generators/block-packager.js';
 
 // Initialize MCP Server
 const server = new McpServer({

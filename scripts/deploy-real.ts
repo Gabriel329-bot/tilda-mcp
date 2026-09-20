@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks';
-import { TildaHttpClient } from './driver/tilda-http-client.js';
+import { TildaHttpClient } from '../src/client/tilda-http-client.js';
 
 const PAGE_ID = process.env.TILDA_PAGE_ID || process.argv[2] || '253396603';
 

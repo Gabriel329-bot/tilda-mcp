@@ -54,3 +54,8 @@ export interface BlockInsertionResult {
   blockId: string;
   pageId: string;
 }
+
+// Re-export common theme & style types
+export type { ThemeTokens } from '../templates/theme-tokens.js';
+export type { StylePresetName, ColorTheme } from '../styles/presets.js';
+export type { T123BlockPackage, HeroBlockPackage } from '../generators/block-packager.js';

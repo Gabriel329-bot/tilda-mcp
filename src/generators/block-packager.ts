@@ -125,8 +125,8 @@ function escapeComment(str: string): string {
   return str.replace(/-->/g, '-- >');
 }
 
-import { MediaOrchestrator } from '../generators/media-orchestrator.js';
-import { TemplateEngine } from '../generators/template-engine.js';
+import { MediaOrchestrator } from './media-orchestrator.js';
+import { TemplateEngine } from './template-engine.js';
 import { ThemeTokens } from '../templates/theme-tokens.js';
 
 export const TAILWIND_HEADER_CDN = `<script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">`;

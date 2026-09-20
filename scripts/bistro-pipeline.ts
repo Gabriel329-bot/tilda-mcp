@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { TildaPlaywrightDriver } from './driver/tilda-driver.js';
-import { packageBlock } from './builder/block-packager.js';
-import { SessionManager } from './auth/session-manager.js';
+import { TildaPlaywrightDriver } from '../src/client/tilda-driver.js';
+import { packageBlock } from '../src/generators/block-packager.js';
+import { SessionManager } from '../src/auth/session-manager.js';
 
 const PROJECT_ID = '40607103';
 const PAGE_TITLE = 'ВкусноЕ Бистро';
