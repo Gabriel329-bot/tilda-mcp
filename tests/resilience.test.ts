@@ -162,12 +162,48 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     expect(BLOCK_TEMPLATES.PR01).toBe('776');
     expect(BLOCK_TEMPLATES['776']).toBe('776');
 
-    // Verify dark CSS rules for pricing
+    // Verify dark CSS rules for pricing and typography
     const darkCss = getPresetCss('dark');
     expect(darkCss).toContain('.t-pricing__features, .t-pricing__col, .t776__features');
     expect(darkCss).toContain('background: transparent !important');
-    expect(darkCss).toContain('rgba(15, 23, 42, 0.75) !important');
-    expect(darkCss).toContain('color: #e2e8f0 !important');
+    expect(darkCss).toContain('letter-spacing: -0.03em !important');
+    expect(darkCss).toContain('color: #CBD5E1 !important');
+    expect(darkCss).toContain('border-radius: 100px !important');
     expect(darkCss).toContain('margin-top: 24px !important');
   });
+
+  it('Scenario 7: DJI Preset Tokens, Component Rules & CSS', async () => {
+    const { STYLE_PRESETS, DJI_PRESET_CSS, getPresetCss } = await import('../src/styles/presets.js');
+
+    // 1. Verify Palette Tokens
+    expect(STYLE_PRESETS.dji).toBeDefined();
+    expect(STYLE_PRESETS.dji.accentBtnBg).toBe('#0070D5'); // Sky CTA
+    expect(STYLE_PRESETS.dji.accentBadge).toBe('#3B63A9'); // Accent Deep Blue
+    expect(STYLE_PRESETS.dji.bgPrimary).toBe('#000000'); // Dark Canvas
+    expect(STYLE_PRESETS.dji.bgSecondary).toBe('#FFFFFF'); // Light Canvas
+    expect(STYLE_PRESETS.dji.cardBg).toBe('#EDEDED'); // Card background
+    expect(STYLE_PRESETS.dji.textPrimary).toBe('#000000');
+    expect(STYLE_PRESETS.dji.textSecondary).toBe('#6C7073');
+
+    // 2. Verify Component Rules in CSS
+    const djiCss = getPresetCss('dji');
+    expect(djiCss).toBe(DJI_PRESET_CSS);
+
+    // Buttons: 1408px pill, Sky CTA #0070D5, 500 weight, 36-40px height
+    expect(djiCss).toContain('border-radius: 1408px !important');
+    expect(djiCss).toContain('background-color: #0070D5 !important');
+    expect(djiCss).toContain('font-weight: 500 !important');
+    expect(djiCss).toContain('min-height: 36px !important');
+
+    // Cards: 4px flat border-radius, #EDEDED background, box-shadow: none
+    expect(djiCss).toContain('background-color: #EDEDED !important');
+    expect(djiCss).toContain('border-radius: 4px !important');
+    expect(djiCss).toContain('box-shadow: none !important');
+    expect(djiCss).toContain('border-color: #3B63A9 !important');
+
+    // Badges and list markers
+    expect(djiCss).toContain('color: #3B63A9 !important');
+    expect(djiCss).toContain('\\2014\\00a0');
+  });
 });
+

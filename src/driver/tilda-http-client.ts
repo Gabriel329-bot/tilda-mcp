@@ -762,7 +762,7 @@ export class TildaHttpClient {
     // 1. Resolve block template ID and style preset
     const tplId = String(fields.tplId || fields.tplid || this.recordTplMap.get(recordId) || '');
     const rawPreset = fields.style_preset || fields.theme || (fields.colormode === 'dark' ? 'dark' : 'minimal');
-    const preset: StylePresetName = (rawPreset === 'dark' || rawPreset === 'minimal' || rawPreset === 'warm') ? rawPreset : 'minimal';
+    const preset: StylePresetName = (rawPreset === 'dark' || rawPreset === 'minimal' || rawPreset === 'warm' || rawPreset === 'dji') ? rawPreset : 'minimal';
     const theme = STYLE_PRESETS[preset] || STYLE_PRESETS.minimal;
     const isDark = preset === 'dark' || fields.colormode === 'dark';
 
@@ -850,7 +850,77 @@ export class TildaHttpClient {
     // SMART DEFAULTS: 1. Cover Hero (CR16 / CR30 / CR15 - tplId 205, 204, 18)
     // =========================================================================
     if (isHero) {
-      if (preset === 'dark') {
+      if (preset === 'dji') {
+        // DJI Engineering Minimalist Hero: Clean black mask (85%), Sky CTA pill button, transparent white-bordered secondary button
+        scalarFields.overlaycolor = fields.overlaycolor || fields.filtercolor || '#000000';
+        scalarFields.overlaycolor2 = fields.overlaycolor2 || fields.filtercolor2 || '#000000';
+        scalarFields.filtercolor = scalarFields.overlaycolor;
+        scalarFields.filtercolor2 = scalarFields.overlaycolor2;
+        scalarFields.overlayopacity =
+          fields.overlayopacity !== undefined
+            ? String(fields.overlayopacity)
+            : fields.filteropacity !== undefined
+            ? String(fields.filteropacity)
+            : '85';
+        scalarFields.overlayopacity2 =
+          fields.overlayopacity2 !== undefined
+            ? String(fields.overlayopacity2)
+            : fields.filteropacity2 !== undefined
+            ? String(fields.filteropacity2)
+            : '85';
+        scalarFields.filteropacity = scalarFields.overlayopacity;
+        scalarFields.filteropacity2 = scalarFields.overlayopacity2;
+
+        scalarFields.title_color = fields.title_color || '#FFFFFF';
+        scalarFields.descr_color = fields.descr_color || '#CBD5E1';
+
+        // Sky CTA button (#0070D5, full pill 1408px, font-weight 500)
+        scalarFields.btn_bg_color = fields.btn_bg_color || fields.buttonbgcolor || '#0070D5';
+        scalarFields.buttonbgcolor = scalarFields.btn_bg_color;
+        scalarFields.bbuttonbgcolor = scalarFields.btn_bg_color;
+        scalarFields.buttontitle_color =
+          fields.buttontitle_color || fields.buttoncolor || '#FFFFFF';
+        scalarFields.buttoncolor = scalarFields.buttontitle_color;
+        scalarFields.buttontextcolor = scalarFields.buttontitle_color;
+        scalarFields.bbuttoncolor = scalarFields.buttontitle_color;
+
+        const btnObj: any = {
+          bgcolor: scalarFields.btn_bg_color,
+          color: scalarFields.buttontitle_color,
+          size: 'md',
+          radius: '1408px',
+          fontweight: '500',
+        };
+        scalarFields.button_styles = JSON.stringify(btnObj);
+        scalarFields.bbutton_styles = JSON.stringify(btnObj);
+
+        // Secondary button
+        scalarFields.btn2_bg_color = fields.btn2_bg_color || fields.button2bgcolor || 'transparent';
+        scalarFields.button2bgcolor = scalarFields.btn2_bg_color;
+        scalarFields.buttonlink2_color =
+          fields.buttonlink2_color || fields.button2color || '#FFFFFF';
+        scalarFields.button2color = scalarFields.buttonlink2_color;
+        scalarFields.btn2_border_color =
+          fields.btn2_border_color || fields.button2bordercolor || 'rgba(255, 255, 255, 0.4)';
+        scalarFields.button2bordercolor = scalarFields.btn2_border_color;
+        scalarFields.btn2_border_width = String(
+          fields.btn2_border_width || fields.button2bordersize || '1px'
+        );
+        scalarFields.button2bordersize = scalarFields.btn2_border_width.includes('px')
+          ? scalarFields.btn2_border_width
+          : `${scalarFields.btn2_border_width}px`;
+
+        const btn2Obj: any = {
+          bgcolor: scalarFields.btn2_bg_color,
+          color: scalarFields.buttonlink2_color,
+          bordercolor: scalarFields.btn2_border_color,
+          bordersize: scalarFields.button2bordersize,
+          size: 'md',
+          radius: '1408px',
+          fontweight: '500',
+        };
+        scalarFields.button2_styles = JSON.stringify(btn2Obj);
+      } else if (preset === 'dark') {
         // High density darkening mask for dark theme (85%)
         scalarFields.overlaycolor = fields.overlaycolor || fields.filtercolor || '#0A0C10';
         scalarFields.overlaycolor2 = fields.overlaycolor2 || fields.filtercolor2 || '#0A0C10';
@@ -1009,12 +1079,14 @@ export class TildaHttpClient {
       scalarFields.buttontextcolor = scalarFields.buttontitle_color;
       scalarFields.bbuttoncolor = scalarFields.buttontitle_color;
 
+      const formBtnRadius = preset === 'dji' ? '1408px' : isDark ? '100px' : '12px';
+      const formBtnWeight = preset === 'dji' ? '500' : '700';
       const formBtnObj: any = {
         bgcolor: scalarFields.btn_bg_color,
         color: scalarFields.buttontitle_color,
         size: 'md',
-        radius: isDark ? '100px' : '12px',
-        fontweight: '700',
+        radius: formBtnRadius,
+        fontweight: formBtnWeight,
       };
       scalarFields.button_styles = JSON.stringify(formBtnObj);
       scalarFields.bbutton_styles = JSON.stringify(formBtnObj);

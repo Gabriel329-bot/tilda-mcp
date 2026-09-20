@@ -1,4 +1,4 @@
-export type StylePresetName = 'dark' | 'minimal' | 'warm';
+export type StylePresetName = 'dark' | 'minimal' | 'warm' | 'dji';
 
 export interface ColorTheme {
   bgPrimary: string;
@@ -7,6 +7,8 @@ export interface ColorTheme {
   textSecondary: string;
   accentBtnBg: string;
   accentBtnText: string;
+  accentBadge?: string;
+  cardBg?: string;
 }
 
 export const STYLE_PRESETS: Record<StylePresetName, ColorTheme> = {
@@ -33,6 +35,16 @@ export const STYLE_PRESETS: Record<StylePresetName, ColorTheme> = {
     textSecondary: '#78716C',
     accentBtnBg: '#C25E38',
     accentBtnText: '#FFFFFF',
+  },
+  dji: {
+    bgPrimary: '#000000',
+    bgSecondary: '#FFFFFF',
+    textPrimary: '#000000',
+    textSecondary: '#6C7073',
+    accentBtnBg: '#0070D5',
+    accentBtnText: '#FFFFFF',
+    accentBadge: '#3B63A9',
+    cardBg: '#EDEDED',
   },
 };
 
@@ -218,9 +230,176 @@ export const DARK_PRESET_CSS = `<style>
   }
 </style>`;
 
+export const DJI_PRESET_CSS = `<style>
+  /* ========================================================= */
+  /* 1. DJI Премиальный инженерный минимализм (dji)           */
+  /* ========================================================= */
+  body, .t-body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Четкая типографика в стиле DJI */
+  .t-title, .t-name, .t-heading, h1, h2, h3, .t-card__title, .t776__title {
+    letter-spacing: -0.02em !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+  }
+
+  .t-descr, .t-text, .t-subtext, .t-card__descr, .t776__descr {
+    color: #6C7073 !important;
+    line-height: 1.5 !important;
+  }
+
+  /* ========================================================= */
+  /* 2. Кнопки (Full Pill: 1408px, Sky CTA #0070d5, 36-40px)  */
+  /* ========================================================= */
+  .t-btn, .t-submit, .t776__btn, .t-pricing__button, .t-btnflex {
+    border-radius: 1408px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0 !important;
+    transition: all 0.2s ease-in-out !important;
+  }
+
+  /* Основная Sky CTA кнопка */
+  .t-btn:not(.t-btnflex_type_button2):not(.t-btn_transparent), .t-submit, .t776__btn, .t-pricing__button {
+    background-color: #0070D5 !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    box-shadow: none !important;
+    min-height: 36px !important;
+    line-height: 36px !important;
+    padding: 0 24px !important;
+  }
+  .t-btn:hover:not(.t-btnflex_type_button2):not(.t-btn_transparent), .t-submit:hover, .t776__btn:hover, .t-pricing__button:hover {
+    background-color: #005bb5 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(0, 112, 213, 0.3) !important;
+  }
+
+  /* Вторичные кнопки */
+  .t-btnflex_type_button2, .t-btn_transparent {
+    background-color: transparent !important;
+    color: #0070D5 !important;
+    border: 1px solid #0070D5 !important;
+    box-shadow: none !important;
+  }
+  .t-cover .t-btnflex_type_button2, .t-cover .t-btn_transparent {
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  }
+  .t-btnflex_type_button2:hover, .t-btn_transparent:hover {
+    background-color: rgba(0, 112, 213, 0.08) !important;
+  }
+  .t-cover .t-btnflex_type_button2:hover, .t-cover .t-btn_transparent:hover {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: #FFFFFF !important;
+  }
+
+  /* ========================================================= */
+  /* 3. Карточки (Flat 4px border-radius, без теней, #ededed)  */
+  /* ========================================================= */
+  .t491__col, .t-card__col, .t513__col, .t-feed__col,
+  .t776__col, .t776__wrapper, .t1072__content, .t142__wrapper, .t-pricing__col,
+  .t533__wrapper {
+    background-color: #EDEDED !important;
+    border: 1px solid #E0E0E0 !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.2s ease, background-color 0.2s ease !important;
+  }
+
+  .t491__col:hover, .t-card__col:hover, .t513__col:hover,
+  .t776__col:hover, .t776__wrapper:hover, .t1072__content:hover, .t-pricing__col:hover {
+    border-color: #3B63A9 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  /* Текст внутри светлых карточек */
+  .t491__col .t-card__title, .t-card__col .t-card__title, .t776__title, .t533__title {
+    color: #000000 !important;
+    font-weight: 600 !important;
+  }
+  .t491__col .t-card__descr, .t-card__col .t-card__descr, .t776__descr, .t533__descr {
+    color: #6C7073 !important;
+  }
+
+  /* Скрытие отдельного знака валюты ($) */
+  .t776__price-currency, .t-pricing__currency, .t1072__price-currency {
+    display: none !important;
+  }
+
+  /* Цена в карточках */
+  .t776__price, .t-pricing__price, .t1072__price, .t-card__price {
+    font-size: 32px !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    margin: 12px 0 16px 0 !important;
+  }
+
+  /* Списки преимуществ в карточках */
+  .t-pricing__features, .t776__features, .t142__features, .t776__descr ul, .t-card__descr ul {
+    list-style: none !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    background: transparent !important;
+  }
+  .t-pricing__features li, .t776__features li, .t142__features li, .t776__descr ul li, .t-card__descr ul li {
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px 0 !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+    color: #333333 !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+  }
+  .t-pricing__features li::before, .t776__features li::before, .t142__features li::before, .t776__descr ul li::before, .t-card__descr ul li::before {
+    content: '\\2014\\00a0' !important;
+    color: #3B63A9 !important;
+    margin-right: 8px !important;
+    font-weight: 600 !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Выделенная карточка (is_featured) */
+  .t776__featured, .t776__col_featured, .t1072__featured, .t-pricing__col_featured {
+    border: 1px solid #3B63A9 !important;
+  }
+
+  /* Акцентные бейджи / плашки */
+  .t-card__badge, .t776__badge, .t-badge {
+    background-color: #3B63A9 !important;
+    color: #FFFFFF !important;
+    border-radius: 2px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 2px 8px !important;
+  }
+
+  /* Поля ввода формы в инженерном стиле */
+  .t-input {
+    background-color: #F7F7F7 !important;
+    border: 1px solid #D1D5DB !important;
+    border-radius: 4px !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+  }
+  .t-input:focus {
+    border-color: #0070D5 !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 0 0 0 2px rgba(0, 112, 213, 0.2) !important;
+  }
+</style>`;
+
 export function getPresetCss(preset: StylePresetName): string {
   if (preset === 'dark') {
     return DARK_PRESET_CSS;
   }
+  if (preset === 'dji') {
+    return DJI_PRESET_CSS;
+  }
   return '';
 }
+

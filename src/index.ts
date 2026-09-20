@@ -3,7 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { TildaHttpClient } from './driver/tilda-http-client.js';
 import { performance } from 'perf_hooks';
-import { STYLE_PRESETS, StylePresetName, DARK_PRESET_CSS } from './styles/presets.js';
+import { STYLE_PRESETS, StylePresetName, DARK_PRESET_CSS, DJI_PRESET_CSS, getPresetCss } from './styles/presets.js';
 
 // Initialize MCP Server
 const server = new McpServer({
@@ -57,7 +57,7 @@ server.tool(
     pageId: z.string().optional().describe('Target page ID (created if omitted)'),
     landingTitle: z.string().optional().describe('Page title'),
     title: z.string().optional().describe('Alias for landingTitle'),
-    style_preset: z.enum(['dark', 'minimal', 'warm']).default('minimal').optional().describe('Color preset: dark, minimal, warm'),
+    style_preset: z.enum(['dark', 'minimal', 'warm', 'dji']).default('minimal').optional().describe('Color preset: dark, minimal, warm, dji'),
     safeMode: z.boolean().optional().default(true).describe('Human-like pacing delays'),
     custom_css: z.string().optional().describe('Custom CSS/HTML for T123 embed'),
     sections: z.object({
@@ -249,8 +249,8 @@ server.tool(
           buttontitle: sections.header.btn_text || 'Связаться',
           buttonlink: sections.header.btn_href || '#form',
           bg_color: theme.bgPrimary,
-          title_color: theme.textPrimary,
-          color: theme.textPrimary,
+          title_color: presetKey === 'dji' || presetKey === 'dark' ? '#FFFFFF' : theme.textPrimary,
+          color: presetKey === 'dji' || presetKey === 'dark' ? '#FFFFFF' : theme.textPrimary,
           btn_bg_color: theme.accentBtnBg,
           buttontitle_color: theme.accentBtnText,
           colormode,
@@ -288,9 +288,9 @@ server.tool(
           buttonlink2: heroBtn2Link,
           img: bgImg,
           bgimg: bgImg,
-          title_color: theme.textPrimary,
-          descr_color: theme.textSecondary,
-          color: theme.textPrimary,
+          title_color: presetKey === 'dji' || presetKey === 'dark' ? '#FFFFFF' : theme.textPrimary,
+          descr_color: presetKey === 'dji' || presetKey === 'dark' ? '#CBD5E1' : theme.textSecondary,
+          color: presetKey === 'dji' || presetKey === 'dark' ? '#FFFFFF' : theme.textPrimary,
           btn_bg_color: theme.accentBtnBg,
           buttontitle_color: theme.accentBtnText,
           colormode,
@@ -332,7 +332,7 @@ server.tool(
           btitle: sections.metrics.title,
           bdescr: sections.metrics.descr !== undefined ? sections.metrics.descr : ' ',
           rec_anchor: 'metrics',
-          bg_color: theme.bgPrimary,
+          bg_color: presetKey === 'dji' ? '#FFFFFF' : theme.bgPrimary,
           title_color: theme.textPrimary,
           descr_color: theme.textSecondary,
           color: theme.textPrimary,
@@ -399,7 +399,7 @@ server.tool(
             btitle: sections.testimonials!.title,
             bdescr: sections.testimonials!.descr || '',
             rec_anchor: 'reviews',
-            bg_color: theme.bgPrimary,
+            bg_color: presetKey === 'dji' ? '#FFFFFF' : theme.bgPrimary,
             title_color: theme.textPrimary,
             descr_color: theme.textSecondary,
             color: theme.textPrimary,
@@ -465,11 +465,11 @@ server.tool(
           buttontitle: sections.form.btn_text,
           rec_anchor: 'form',
           inputs: sections.form.inputs,
-          bg_color: sections.faq ? theme.bgPrimary : theme.bgSecondary,
-          title_color: theme.textPrimary,
-          descr_color: theme.textSecondary,
-          color: theme.textPrimary,
-          colormode,
+          bg_color: presetKey === 'dji' ? '#000000' : (sections.faq ? theme.bgPrimary : theme.bgSecondary),
+          title_color: presetKey === 'dji' ? '#FFFFFF' : theme.textPrimary,
+          descr_color: presetKey === 'dji' ? '#94A3B8' : theme.textSecondary,
+          color: presetKey === 'dji' ? '#FFFFFF' : theme.textPrimary,
+          colormode: presetKey === 'dji' ? 'dark' : colormode,
           theme: presetKey,
           style_preset: presetKey,
         })
@@ -483,11 +483,11 @@ server.tool(
           client.updateBlock(targetPageId, footRec, {
             title: sections.footer!.title || '',
             descr: sections.footer!.descr || sections.footer!.text || '',
-            bg_color: sections.faq ? theme.bgSecondary : theme.bgPrimary,
-            title_color: theme.textPrimary,
-            descr_color: theme.textSecondary,
-            color: theme.textPrimary,
-            colormode,
+            bg_color: presetKey === 'dji' ? '#000000' : (sections.faq ? theme.bgSecondary : theme.bgPrimary),
+            title_color: presetKey === 'dji' ? '#FFFFFF' : theme.textPrimary,
+            descr_color: presetKey === 'dji' ? '#94A3B8' : theme.textSecondary,
+            color: presetKey === 'dji' ? '#FFFFFF' : theme.textPrimary,
+            colormode: presetKey === 'dji' ? 'dark' : colormode,
             theme: presetKey,
             style_preset: presetKey,
           })
@@ -497,10 +497,11 @@ server.tool(
 
       // 10. Auto-CSS / Custom CSS Embed (T123 - tplId 131)
       let cssCode = custom_css || sections.custom_css;
-      if (!cssCode && presetKey === 'dark') {
-        cssCode = DARK_PRESET_CSS;
-      } else if (cssCode && presetKey === 'dark' && !cssCode.includes('t-pricing__features')) {
-        cssCode = `${DARK_PRESET_CSS}\n${cssCode}`;
+      const presetCss = getPresetCss(presetKey);
+      if (!cssCode && presetCss) {
+        cssCode = presetCss;
+      } else if (cssCode && presetCss && !cssCode.includes('t-pricing__features')) {
+        cssCode = `${presetCss}\n${cssCode}`;
       }
 
       if (cssCode) {
@@ -586,7 +587,7 @@ server.tool(
       ])
       .describe('Section name to update'),
     recordId: z.string().optional().describe('Direct record ID (auto-resolved if omitted)'),
-    style_preset: z.enum(['dark', 'minimal', 'warm']).optional().describe('Style preset override'),
+    style_preset: z.enum(['dark', 'minimal', 'warm', 'dji']).optional().describe('Style preset override'),
     content: z.record(z.any()).describe('Fields to update in the section'),
     publish: z.boolean().optional().default(true).describe('Republish page after update'),
   },
