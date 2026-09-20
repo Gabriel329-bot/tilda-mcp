@@ -76,10 +76,24 @@ export class TemplateEngine {
       .replace('{{PLANS}}', plans);
   }
 
-  static renderContact(data: any): string {
+  static renderFAQ(data: any): string {
+    const items = (data.items || []).map((item: any) => {
+      return TEMPLATES.faqItem
+        .replace('{{QUESTION}}', item.question || item.title || '')
+        .replace('{{ANSWER}}', item.answer || item.descr || '');
+    }).join('\n');
+
+    return TEMPLATES.faqContainer
+      .replace('{{SECTION_TITLE}}', data.title || 'Часто задаваемые вопросы')
+      .replace('{{SECTION_DESCR}}', data.descr || '')
+      .replace('{{ITEMS}}', items);
+  }
+
+  static renderContact(data: any, webhookUrl?: string): string {
     return TEMPLATES.contactSection
       .replace('{{TITLE}}', data.title || 'Запись на ознакомительный визит')
       .replace('{{DESCR}}', data.descr || '')
-      .replace('{{BTN_TEXT}}', data.btn_text || 'Записаться на визит');
+      .replace('{{BTN_TEXT}}', data.btn_text || 'Записаться на визит')
+      .replace('{{WEBHOOK_URL}}', webhookUrl || data.webhook_url || '');
   }
 }

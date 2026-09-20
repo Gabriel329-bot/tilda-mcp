@@ -11,6 +11,7 @@ import {
   packageMetricsSection,
   packagePricingSection,
   packageContactSection,
+  packageFaqSection,
 } from './builder/block-packager.js';
 
 // Initialize MCP Server
@@ -37,7 +38,7 @@ export const SECTION_TPL_MAP: Record<string, string[]> = {
   metrics: ['131', '1050'],
   pricing: ['131', '776', '1072', '301', '142'],
   testimonials: ['533', '605', '441'],
-  faq: ['585', '746'],
+  faq: ['131', '585', '746'],
   form: ['131', '678'],
   footer: ['144'],
   custom_css: ['131'],
@@ -350,30 +351,12 @@ server.tool(
         sectionsGenerated.push('testimonials');
       }
 
-      // 7. Optional FAQ Accordion (TX16N - tplId 585) with #faq anchor
+      // 7. Optional FAQ Accordion (Template Vault: Interactive Accordion via T123)
       if (sections.faq) {
-        const faqRec = await client.addBlock(targetPageId, 'TX16N');
+        const faqPackage = packageFaqSection(sections.faq);
+        const faqRec = await client.addBlock(targetPageId, faqPackage.tplId);
         updateTasks.push(() =>
-          client.updateBlock(targetPageId, faqRec, {
-            btitle: sections.faq!.title,
-            bdescr: sections.faq!.descr || '',
-            rec_anchor: 'faq',
-            bg_color: theme.bgSecondary,
-            title_color: theme.textPrimary,
-            descr_color: theme.textSecondary,
-            color: theme.textPrimary,
-            color2: theme.textSecondary,
-            li_title_color: theme.textPrimary,
-            li_descr_color: theme.textSecondary,
-            colormode,
-            theme: presetKey,
-            list: sections.faq!.items.map((item, i) => ({
-              lid: String(i + 1),
-              ls: String(i + 1),
-              li_title: item.question,
-              li_descr: item.answer,
-            })),
-          })
+          client.updateBlock(targetPageId, faqRec, faqPackage.fields)
         );
         sectionsGenerated.push('faq');
       }

@@ -119,8 +119,10 @@ export const TEMPLATES = {
 </div>
 `,
 
-  // 5. CONTACT / FORM SECTION (Премиальная темная подложка, выверенная форма с кодом +7)
+  // 5. CONTACT / FORM SECTION (Премиальная темная подложка, маска телефона, валидация и async отправка)
   contactSection: `
+<style>html { scroll-behavior: smooth; }</style>
+<script src="https://unpkg.com/imask" onload="initLeadPhoneMask()"></script>
 <section id="form" class="w-full py-24 bg-black text-white font-['Open_Sans',sans-serif] border-t border-white/10">
   <div class="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
     <div>
@@ -149,19 +151,19 @@ export const TEMPLATES = {
       </div>
     </div>
 
-    <div class="p-8 rounded-[4px] bg-[#111111] border border-white/10">
-      <form onsubmit="event.preventDefault(); alert('Заявка отправлена!');" class="space-y-4">
+    <div id="lead-form-container" class="p-8 rounded-[4px] bg-[#111111] border border-white/10">
+      <form id="lead-form" onsubmit="handleLeadSubmit(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Ваше имя</label>
-          <input type="text" required placeholder="Константин" class="w-full h-11 px-4 rounded-[4px] bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[#0070D5] transition-colors" />
+          <input type="text" name="name" required placeholder="Константин" class="w-full h-11 px-4 rounded-[4px] bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[#0070D5] transition-colors" />
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Номер телефона</label>
-          <input type="tel" required placeholder="+7 (___) ___-__-__" class="w-full h-11 px-4 rounded-[4px] bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[#0070D5] transition-colors" />
+          <input type="tel" id="lead-phone" name="phone" required placeholder="+7 (___) ___-__-__" class="w-full h-11 px-4 rounded-[4px] bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[#0070D5] transition-colors" />
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Email для обратной связи</label>
-          <input type="email" required placeholder="name@domain.com" class="w-full h-11 px-4 rounded-[4px] bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[#0070D5] transition-colors" />
+          <input type="email" name="email" required placeholder="name@domain.com" class="w-full h-11 px-4 rounded-[4px] bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[#0070D5] transition-colors" />
         </div>
         <button type="submit" class="w-full h-12 mt-2 rounded-[1408px] bg-[#0070D5] hover:bg-blue-600 text-white font-medium text-sm transition-all duration-200 shadow-lg shadow-blue-500/25 cursor-pointer">
           {{BTN_TEXT}}
@@ -173,5 +175,94 @@ export const TEMPLATES = {
     </div>
   </div>
 </section>
+<script>
+function initLeadPhoneMask() {
+  var phoneEl = document.getElementById('lead-phone');
+  if (phoneEl && typeof IMask !== 'undefined') {
+    IMask(phoneEl, { mask: '+{7} (000) 000-00-00' });
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLeadPhoneMask);
+} else {
+  initLeadPhoneMask();
+}
+
+async function handleLeadSubmit(event) {
+  event.preventDefault();
+  var form = event.target;
+  var btn = form.querySelector('button[type="submit"]');
+  var originalBtnText = btn.innerHTML;
+  btn.innerHTML = '<span class="animate-spin inline-block mr-2">⏳</span> Отправка...';
+  btn.disabled = true;
+
+  try {
+    var webhook = '{{WEBHOOK_URL}}';
+    if (webhook && webhook !== '{{WEBHOOK_URL}}' && webhook.startsWith('http')) {
+      var formData = new FormData(form);
+      var payload = Object.fromEntries(formData.entries());
+      await fetch(webhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await new Promise(function(r) { setTimeout(r, 800); });
+    }
+
+    var container = document.getElementById('lead-form-container');
+    if (container) {
+      container.innerHTML = \`
+        <div class="py-8 px-4 text-center flex flex-col items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-2 tracking-tight">Заявка принята!</h3>
+          <p class="text-sm text-slate-400 max-w-sm mb-8 leading-relaxed">
+            Менеджер приемной комиссии свяжется с вами в ближайшее время по указанному номеру телефона.
+          </p>
+          <button type="button" onclick="location.reload()" class="inline-flex items-center justify-center px-6 h-11 rounded-[1408px] bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition-all duration-200 border border-white/10 cursor-pointer">
+            Отправить еще одну
+          </button>
+        </div>
+      \`;
+    }
+  } catch (err) {
+    console.error('Lead submit error:', err);
+    btn.innerHTML = originalBtnText;
+    btn.disabled = false;
+    alert('Произошла ошибка при отправке заявки. Пожалуйста, попробуйте снова.');
+  }
+}
+</script>
+`,
+
+  // 6. FAQ ACCORDION (Интерактивный нативный аккордеон с SVG-стрелками и плавной анимацией)
+  faqContainer: `
+<section id="faq" class="w-full py-20 bg-white font-['Open_Sans',sans-serif] border-t border-slate-200/60">
+  <div class="max-w-4xl mx-auto px-6">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <h2 class="text-3xl font-bold text-slate-900 tracking-tight mb-3">{{SECTION_TITLE}}</h2>
+      <p class="text-base text-slate-500">{{SECTION_DESCR}}</p>
+    </div>
+    <div class="space-y-4">
+      {{ITEMS}}
+    </div>
+  </div>
+</section>
+`,
+
+  faqItem: `
+<details class="group mb-4 rounded-[4px] bg-[#F8FAFC] border border-slate-200/80 p-5 transition-all">
+  <summary class="flex justify-between items-center font-semibold text-slate-900 cursor-pointer list-none select-none">
+    <span class="text-base text-slate-900 pr-4">{{QUESTION}}</span>
+    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[#0070D5] transition-transform duration-200 group-open:rotate-180">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </span>
+  </summary>
+  <div class="text-sm text-slate-600 mt-3 leading-relaxed border-t border-slate-200/50 pt-3">
+    {{ANSWER}}
+  </div>
+</details>
 `
 };

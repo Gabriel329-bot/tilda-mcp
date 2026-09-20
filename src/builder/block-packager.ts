@@ -211,8 +211,8 @@ export function packagePricingSection(data: any): T123BlockPackage {
 /**
  * Packages the Contact / Form section into a custom studio T123 block.
  */
-export function packageContactSection(data: any): T123BlockPackage {
-  const html = TemplateEngine.renderContact(data);
+export function packageContactSection(data: any, webhookUrl?: string): T123BlockPackage {
+  const html = TemplateEngine.renderContact(data, webhookUrl);
   return {
     tplId: 'T123',
     fields: {
@@ -221,6 +221,21 @@ export function packageContactSection(data: any): T123BlockPackage {
     },
   };
 }
+
+/**
+ * Packages the FAQ Accordion section into a custom studio T123 block.
+ */
+export function packageFaqSection(data: any): T123BlockPackage {
+  const html = TemplateEngine.renderFAQ(data);
+  return {
+    tplId: 'T123',
+    fields: {
+      code: html,
+      rawcod: html,
+    },
+  };
+}
+
 
 
 
