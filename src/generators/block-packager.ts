@@ -128,6 +128,7 @@ function escapeComment(str: string): string {
 import { MediaOrchestrator } from './media-orchestrator.js';
 import { TemplateEngine } from './template-engine.js';
 import { ThemeTokens } from '../templates/theme-tokens.js';
+import { SeoOrchestrator } from './seo-orchestrator.js';
 
 export const TAILWIND_HEADER_CDN = `<script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">`;
 
@@ -143,27 +144,88 @@ export type HeroBlockPackage = T123BlockPackage;
 
 /**
  * Packages the Hero section into a custom Design Engine T123 block,
- * resolving media via MediaOrchestrator and generating studio Tailwind HTML.
+ * resolving media via MediaOrchestrator and generating studio Tailwind HTML
+ * with critical image preload, Schema.org JSON-LD and global CRO overlays.
  */
 export function packageHeroSection(
   data: any,
   niche = 'telecom',
   includeCdn = true,
-  theme?: string | ThemeTokens
+  theme?: string | ThemeTokens,
+  seoData?: any,
+  croOptions?: any
 ): T123BlockPackage {
   const orchestrator = new MediaOrchestrator();
   const backgroundUrl = data.backgroundUrl || data.bg_image_url || orchestrator.resolveHeroImage(niche);
 
   let heroHtml = TemplateEngine.renderHero(data, backgroundUrl, theme);
+
+  let prefix = '';
   if (includeCdn) {
-    heroHtml = `${TAILWIND_HEADER_CDN}\n${heroHtml}`;
+    prefix += `${TAILWIND_HEADER_CDN}\n`;
   }
+  if (backgroundUrl) {
+    prefix += `<link rel="preload" as="image" href="${backgroundUrl}">\n`;
+  }
+
+  const effectiveSeo = seoData || {
+    title: data.title || 'Landing Page',
+    descr: data.descr || data.subtitle || '',
+    faq: data.faq,
+    pricing: data.pricing,
+  };
+  prefix += `${SeoOrchestrator.generateJsonLd(effectiveSeo)}\n`;
+
+  const croHtml = TemplateEngine.renderCroOverlays(croOptions, theme);
+  const fullHtml = `${prefix}${heroHtml}\n${croHtml}`;
 
   return {
     tplId: 'T123',
     fields: {
-      code: heroHtml,
-      rawcod: heroHtml,
+      code: fullHtml,
+      rawcod: fullHtml,
+    },
+  };
+}
+
+/**
+ * Packages the Marquee / Tech Stack section into a custom studio T123 block.
+ */
+export function packageMarqueeSection(items?: string[], theme?: string | ThemeTokens): T123BlockPackage {
+  const html = TemplateEngine.renderMarquee(items, theme);
+  return {
+    tplId: 'T123',
+    fields: {
+      code: html,
+      rawcod: html,
+    },
+  };
+}
+
+/**
+ * Packages the Timeline / How It Works section into a custom studio T123 block.
+ */
+export function packageTimelineSection(data: any, theme?: string | ThemeTokens): T123BlockPackage {
+  const html = TemplateEngine.renderTimeline(data, theme);
+  return {
+    tplId: 'T123',
+    fields: {
+      code: html,
+      rawcod: html,
+    },
+  };
+}
+
+/**
+ * Packages the Calculator section into a custom studio T123 block.
+ */
+export function packageCalculatorSection(data: any, theme?: string | ThemeTokens): T123BlockPackage {
+  const html = TemplateEngine.renderCalculator(data, theme);
+  return {
+    tplId: 'T123',
+    fields: {
+      code: html,
+      rawcod: html,
     },
   };
 }

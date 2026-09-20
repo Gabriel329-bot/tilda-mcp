@@ -55,7 +55,37 @@ export interface BlockInsertionResult {
   pageId: string;
 }
 
+export interface MarqueePayload {
+  items?: string[];
+}
+
+export interface TimelineStep {
+  step?: string;
+  step_num?: string;
+  title: string;
+  descr: string;
+}
+
+export interface TimelinePayload {
+  title?: string;
+  descr?: string;
+  steps: TimelineStep[];
+}
+
+export interface CalculatorPayload {
+  title?: string;
+  descr?: string;
+}
+
+export interface CroOverlaysOptions {
+  stickyTitle?: string;
+  stickySubtitle?: string;
+  stickyBtn?: string;
+  socialProofMsg?: string;
+}
+
 // Re-export common theme & style types
 export type { ThemeTokens } from '../templates/theme-tokens.js';
 export type { StylePresetName, ColorTheme } from '../styles/presets.js';
 export type { T123BlockPackage, HeroBlockPackage } from '../generators/block-packager.js';
+export type { SeoData } from '../generators/seo-orchestrator.js';

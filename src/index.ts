@@ -13,6 +13,9 @@ import {
   packageContactSection,
   packageFaqSection,
   packageFooterSection,
+  packageMarqueeSection,
+  packageTimelineSection,
+  packageCalculatorSection,
 } from './generators/block-packager.js';
 
 // Initialize MCP Server
@@ -116,6 +119,11 @@ server.tool(
         bg_image_url: z.string().optional().describe('Cover background image URL'),
         niche: z.string().optional().describe('Niche preset for background'),
       }),
+      marquee: z
+        .object({
+          items: z.array(z.string()).optional(),
+        })
+        .optional(),
       features: z.object({
         title: z.string(),
         descr: z.string().optional(),
@@ -129,6 +137,20 @@ server.tool(
           )
           .max(4),
       }),
+      timeline: z
+        .object({
+          title: z.string().describe('Timeline / Roadmap section title'),
+          descr: z.string().optional(),
+          steps: z.array(
+            z.object({
+              step: z.string().optional(),
+              step_num: z.string().optional(),
+              title: z.string(),
+              descr: z.string(),
+            })
+          ),
+        })
+        .optional(),
       metrics: z.object({
         title: z.string(),
         descr: z.string().optional(),
@@ -142,6 +164,12 @@ server.tool(
           )
           .max(4),
       }),
+      calculator: z
+        .object({
+          title: z.string().optional(),
+          descr: z.string().optional(),
+        })
+        .optional(),
       pricing: z
         .object({
           title: z.string().describe('Pricing section title'),
@@ -287,18 +315,34 @@ server.tool(
         sectionsGenerated.push('header');
       }
 
-      // 2. Hero Section (Template Vault: HD Cover + Tailwind CSS via T123)
+      // 2. Hero Section (Template Vault: HD Cover + Tailwind CSS via T123 with SEO & CRO)
       const heroPackage = packageHeroSection(
         sections.hero,
         sections.hero.niche || 'telecom',
         true,
-        presetKey
+        presetKey,
+        {
+          title: effectiveTitle,
+          descr: sections.hero.descr || '',
+          faq: sections.faq,
+          pricing: sections.pricing,
+        }
       );
       const heroRec = await client.addBlock(targetPageId, heroPackage.tplId);
       updateTasks.push(() =>
         client.updateBlock(targetPageId, heroRec, heroPackage.fields)
       );
       sectionsGenerated.push('hero');
+
+      // 2b. Optional Marquee (Tech Partners / Stack Social Proof)
+      if (sections.marquee) {
+        const marqueePackage = packageMarqueeSection(sections.marquee.items, presetKey);
+        const marqueeRec = await client.addBlock(targetPageId, marqueePackage.tplId);
+        updateTasks.push(() =>
+          client.updateBlock(targetPageId, marqueeRec, marqueePackage.fields)
+        );
+        sectionsGenerated.push('marquee');
+      }
 
       // 3. Features (Template Vault: Bento Features Grid via T123)
       const featPackage = packageFeaturesSection(sections.features, presetKey);
@@ -308,6 +352,16 @@ server.tool(
       );
       sectionsGenerated.push('features');
 
+      // 3b. Optional Timeline / Roadmap ("Как мы работаем")
+      if (sections.timeline) {
+        const timelinePackage = packageTimelineSection(sections.timeline, presetKey);
+        const timelineRec = await client.addBlock(targetPageId, timelinePackage.tplId);
+        updateTasks.push(() =>
+          client.updateBlock(targetPageId, timelineRec, timelinePackage.fields)
+        );
+        sectionsGenerated.push('timeline');
+      }
+
       // 4. Metrics (Template Vault: Monochromatic Metrics via T123)
       const metrPackage = packageMetricsSection(sections.metrics, presetKey);
       const metrRec = await client.addBlock(targetPageId, metrPackage.tplId);
@@ -315,6 +369,16 @@ server.tool(
         client.updateBlock(targetPageId, metrRec, metrPackage.fields)
       );
       sectionsGenerated.push('metrics');
+
+      // 4b. Optional Calculator (Cost Configurator)
+      if (sections.calculator) {
+        const calcPackage = packageCalculatorSection(sections.calculator, presetKey);
+        const calcRec = await client.addBlock(targetPageId, calcPackage.tplId);
+        updateTasks.push(() =>
+          client.updateBlock(targetPageId, calcRec, calcPackage.fields)
+        );
+        sectionsGenerated.push('calculator');
+      }
 
       // 5. Optional Pricing (Template Vault: Pricing Monolith via T123)
       if (sections.pricing) {

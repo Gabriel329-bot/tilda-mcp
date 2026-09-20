@@ -15,6 +15,8 @@ export function applyTokens(html: string, theme: ThemeTokens): string {
     .replace(/\{\{THEME_ACCENT_GLOW\}\}/g, theme.accentGlow)
     .replace(/\{\{THEME_RADIUS_CARD\}\}/g, theme.radiusCard)
     .replace(/\{\{THEME_RADIUS_BTN\}\}/g, theme.radiusBtn)
+    .replace(/var\(--card-radius\)/g, theme.radiusCard)
+    .replace(/var\(--btn-radius\)/g, theme.radiusBtn)
     .replace(/\{\{THEME_BG_PAGE\}\}/g, bgPage)
     .replace(/\{\{THEME_BG_CARD\}\}/g, bgCard)
     .replace(/\{\{THEME_BORDER\}\}/g, border)
@@ -110,12 +112,26 @@ export class TemplateEngine {
         </li>
       `).join('');
 
+      const rawPrice = plan.price || '0 ₽';
+      const numMatch = rawPrice.replace(/\s/g, '').match(/\d+/);
+      const num = numMatch ? parseInt(numMatch[0], 10) : 0;
+      let priceMonth = rawPrice;
+      let priceYear = rawPrice;
+      if (num > 0) {
+        const discountedMonthly = Math.round(num * 0.8);
+        const currency = rawPrice.includes('$') ? ' $' : rawPrice.includes('€') ? ' €' : ' ₽';
+        priceMonth = `${num.toLocaleString('ru-RU')}${currency}`.replace(/\u00a0/g, ' ');
+        priceYear = `${discountedMonthly.toLocaleString('ru-RU')}${currency}`.replace(/\u00a0/g, ' ');
+      }
+
       return TEMPLATES.pricingCard
         .replace('{{PLAN_NAME}}', plan.name || '')
         .replace('{{BORDER_CLASS}}', borderClass)
         .replace('{{FEATURED_BADGE}}', badge)
-        .replace('{{PRICE}}', plan.price || '0 ₽')
-        .replace('{{PERIOD}}', plan.period || '')
+        .replace('{{PRICE}}', priceMonth)
+        .replace('{{PRICE_MONTH}}', priceMonth)
+        .replace('{{PRICE_YEAR}}', priceYear)
+        .replace('{{PERIOD}}', plan.period || 'месяц')
         .replace('{{FEATURES_LIST}}', featuresList)
         .replace('{{BTN_STYLE}}', btnStyle)
         .replace('{{BTN_TEXT}}', plan.btn_text || 'Выбрать тариф');
@@ -193,6 +209,80 @@ export class TemplateEngine {
     const html = template
       .replace(/\{\{PROJECT_NAME\}\}/g, projectName || 'DevTools Cloud')
       .replace(/\{\{YEAR\}\}/g, year);
+
+    return applyTokens(html, activeTheme);
+  }
+
+  static renderMarquee(items?: string[], theme?: ThemeTokens | string): string {
+    const activeTheme = resolveTheme(theme);
+    const defaultItems = [
+      'Next.js',
+      'PostgreSQL',
+      'Kubernetes',
+      'Redis',
+      'Docker',
+      'ClickHouse',
+      'Tailwind CSS',
+      'TypeScript',
+      'GraphQL',
+      'Prometheus',
+    ];
+    const activeItems = items && items.length > 0 ? items : defaultItems;
+    const itemsHtml = activeItems
+      .map(
+        (it) =>
+          `<span class="flex items-center gap-3"><span>${it}</span><span class="text-slate-600 opacity-60">•</span></span>`
+      )
+      .join('\n');
+
+    const html = TEMPLATES.marqueeSection.replace(/\{\{ITEMS\}\}/g, itemsHtml);
+
+    return applyTokens(html, activeTheme);
+  }
+
+  static renderTimeline(data: any, theme?: ThemeTokens | string): string {
+    const activeTheme = resolveTheme(theme, data);
+    const defaultSteps = [
+      { step: '01', title: 'Аудит и планирование', descr: 'Анализ текущей инфраструктуры и формирование технических требований.' },
+      { step: '02', title: 'Проектирование архитектуры', descr: 'Разработка отказоустойчивой топологии сервисов и схем данных.' },
+      { step: '03', title: 'Развертывание и тесты', descr: 'Настройка пайплайнов автоматического деплоя и нагрузочное тестирование.' },
+      { step: '04', title: 'Запуск и поддержка 24/7', descr: 'Бесшовный ввод в эксплуатацию с постоянным мониторингом доступности.' },
+    ];
+    const stepsData = data?.steps && data.steps.length > 0 ? data.steps : defaultSteps;
+    const stepsHtml = stepsData
+      .map((step: any, idx: number) => {
+        const stepNum = step.step || step.step_num || (idx + 1).toString().padStart(2, '0');
+        return TEMPLATES.timelineStep
+          .replace('{{STEP_NUM}}', String(stepNum))
+          .replace('{{STEP_TITLE}}', step.title || '')
+          .replace('{{STEP_DESCR}}', step.descr || '');
+      })
+      .join('\n');
+
+    const html = TEMPLATES.timelineSection
+      .replace('{{TITLE}}', data?.title || 'Как мы работаем')
+      .replace('{{DESCR}}', data?.descr || 'Поэтапный процесс интеграции и запуска проектов')
+      .replace('{{STEPS}}', stepsHtml);
+
+    return applyTokens(html, activeTheme);
+  }
+
+  static renderCalculator(data?: any, theme?: ThemeTokens | string): string {
+    const activeTheme = resolveTheme(theme, data);
+    const html = TEMPLATES.calculatorSection
+      .replace('{{TITLE}}', data?.title || 'Калькулятор стоимости инфраструктуры')
+      .replace('{{DESCR}}', data?.descr || 'Рассчитайте предварительный бюджет под ваши объемы');
+
+    return applyTokens(html, activeTheme);
+  }
+
+  static renderCroOverlays(options?: any, theme?: ThemeTokens | string): string {
+    const activeTheme = resolveTheme(theme);
+    const html = TEMPLATES.croOverlays
+      .replace('{{STICKY_CTA_TITLE}}', options?.stickyTitle || 'Готовы начать?')
+      .replace('{{STICKY_CTA_SUBTITLE}}', options?.stickySubtitle || 'Тестовый период 14 дней бесплатно')
+      .replace('{{STICKY_CTA_BTN}}', options?.stickyBtn || 'Начать бесплатно')
+      .replace('{{SOCIAL_PROOF_MSG}}', options?.socialProofMsg || 'Алексей (FinTech) только что подключил кластер');
 
     return applyTokens(html, activeTheme);
   }

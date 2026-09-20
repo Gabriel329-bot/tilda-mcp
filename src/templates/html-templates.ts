@@ -112,18 +112,62 @@ export const TEMPLATES = {
 </div>
 `,
 
-  // 4. PRICING MONOLITH (Чистые цены, иконки галочек, динамические кнопки)
+  // 4. PRICING MONOLITH (Чистые цены, иконки галочек, динамические кнопки, переключатель периода)
   pricingContainer: `
 <section id="pricing" class="w-full py-24 {{THEME_BG_PAGE}} {{THEME_FONT}}">
   <div class="max-w-5xl mx-auto px-6">
-    <div class="text-center max-w-2xl mx-auto mb-16">
+    <div class="text-center max-w-2xl mx-auto mb-12">
       <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-4">{{SECTION_TITLE}}</h2>
       <p class="text-base text-slate-500">{{SECTION_DESCR}}</p>
     </div>
+
+    <div class="flex items-center justify-center gap-3 mb-12">
+      <span class="text-sm font-medium text-slate-600">Ежемесячно</span>
+      <button type="button" onclick="toggleBillingPeriod()" id="billing-toggle-btn" class="w-12 h-6 flex items-center bg-slate-200 rounded-full p-1 duration-200 cursor-pointer">
+        <div id="billing-toggle-knob" class="bg-white w-4 h-4 rounded-full shadow-md transform duration-200"></div>
+      </button>
+      <span class="text-sm font-medium text-slate-900 flex items-center gap-1.5">
+        Ежегодно <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">-20%</span>
+      </span>
+    </div>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
       {{PLANS}}
     </div>
   </div>
+  <script>
+  function toggleBillingPeriod() {
+    window.__billingIsYearly = !window.__billingIsYearly;
+    var isYear = window.__billingIsYearly;
+    var btn = document.getElementById('billing-toggle-btn');
+    var knob = document.getElementById('billing-toggle-knob');
+    if (btn && knob) {
+      if (isYear) {
+        btn.classList.remove('bg-slate-200');
+        btn.classList.add('bg-[{{THEME_ACCENT}}]');
+        knob.classList.add('translate-x-6');
+      } else {
+        btn.classList.add('bg-slate-200');
+        btn.classList.remove('bg-[{{THEME_ACCENT}}]');
+        knob.classList.remove('translate-x-6');
+      }
+    }
+    var priceElements = document.querySelectorAll('.pricing-card-price');
+    var periodElements = document.querySelectorAll('.pricing-card-period');
+    priceElements.forEach(function(el) {
+      var m = el.getAttribute('data-month');
+      var y = el.getAttribute('data-year');
+      if (isYear && y) {
+        el.textContent = y;
+      } else if (m) {
+        el.textContent = m;
+      }
+    });
+    periodElements.forEach(function(el) {
+      el.textContent = isYear ? '/ год (-20%)' : '/ месяц';
+    });
+  }
+  </script>
 </section>
 `,
 
@@ -135,8 +179,8 @@ export const TEMPLATES = {
       {{FEATURED_BADGE}}
     </div>
     <div class="mb-8">
-      <span class="text-4xl sm:text-5xl font-extrabold text-slate-950 tracking-tight">{{PRICE}}</span>
-      <span class="text-xs sm:text-sm text-slate-500 ml-2 font-normal">/ {{PERIOD}}</span>
+      <span class="pricing-card-price text-4xl sm:text-5xl font-extrabold text-slate-950 tracking-tight" data-month="{{PRICE_MONTH}}" data-year="{{PRICE_YEAR}}">{{PRICE}}</span>
+      <span class="pricing-card-period text-xs sm:text-sm text-slate-500 ml-2 font-normal">/ {{PERIOD}}</span>
     </div>
     <ul class="space-y-3.5 mb-8">
       {{FEATURES_LIST}}
@@ -421,5 +465,144 @@ async function handleLeadSubmit(event) {
     </div>
   </div>
 </footer>
+`,
+
+  // 8. MARQUEE / SOCIAL PROOF (Бегущая строка партнеров и технологий)
+  marqueeSection: `
+<section class="w-full py-10 {{THEME_BG_PAGE}} border-y {{THEME_BORDER}} overflow-hidden {{THEME_FONT}}">
+  <div class="max-w-7xl mx-auto px-6 mb-4 text-center">
+    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Технологические партнеры и стек</p>
+  </div>
+  <div class="relative w-full overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]">
+    <div class="flex w-max animate-[marquee_25s_linear_infinite] gap-12 text-slate-400 text-sm font-semibold tracking-wide uppercase">
+      {{ITEMS}}
+      {{ITEMS}}
+    </div>
+  </div>
+  <style>
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  </style>
+</section>
+`,
+
+  // 9. TIMELINE / ROADMAP (Этапы работы / Шаги внедрения)
+  timelineSection: `
+<section id="timeline" class="w-full py-24 {{THEME_BG_PAGE}} {{THEME_FONT}}">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="text-center max-w-2xl mx-auto mb-16">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mb-4">{{TITLE}}</h2>
+      <p class="text-slate-500 text-base">{{DESCR}}</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+      {{STEPS}}
+    </div>
+  </div>
+</section>
+`,
+
+  timelineStep: `
+<div class="relative flex flex-col p-6 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}}">
+  <div class="text-3xl font-extrabold text-[{{THEME_ACCENT}}] opacity-30 font-mono mb-3">{{STEP_NUM}}</div>
+  <h3 class="text-lg font-bold text-slate-900 mb-2">{{STEP_TITLE}}</h3>
+  <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">{{STEP_DESCR}}</p>
+</div>
+`,
+
+  // 10. INTERACTIVE CALCULATOR (Конфигуратор и расчет стоимости)
+  calculatorSection: `
+<section id="calculator" class="w-full py-24 {{THEME_BG_PAGE}} border-t {{THEME_BORDER}} {{THEME_FONT}}">
+  <div class="max-w-4xl mx-auto px-6">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mb-4">{{TITLE}}</h2>
+      <p class="text-slate-500 text-base">{{DESCR}}</p>
+    </div>
+    <div class="p-8 sm:p-10 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} shadow-sm">
+      <div class="space-y-6 mb-8">
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-slate-700">Количество рабочих мест / серверов:</span>
+            <span id="calc-val-display" class="text-lg font-bold text-[{{THEME_ACCENT}}]">5 узлов</span>
+          </div>
+          <input id="calc-slider" type="range" min="1" max="50" value="5" class="w-full accent-[{{THEME_ACCENT}}] cursor-pointer" oninput="updateCalculator(this.value)" />
+        </div>
+      </div>
+      <div class="pt-6 border-t {{THEME_BORDER}} flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <div class="text-xs text-slate-500">Ориентировочная стоимость:</div>
+          <div id="calc-total" class="text-3xl sm:text-4xl font-extrabold text-slate-950">25 000 ₽ <span class="text-sm font-normal text-slate-500">/ мес</span></div>
+        </div>
+        <a href="#form" class="h-12 px-8 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all shadow-md cursor-pointer">
+          Зафиксировать цену
+        </a>
+      </div>
+    </div>
+  </div>
+  <script>
+    function updateCalculator(val) {
+      var disp = document.getElementById('calc-val-display');
+      if (disp) disp.innerText = val + ' узлов';
+      var base = 5000;
+      var total = Number(val) * base;
+      var totalElem = document.getElementById('calc-total');
+      if (totalElem) totalElem.innerHTML = total.toLocaleString('ru-RU') + ' ₽ <span class="text-sm font-normal text-slate-500">/ мес</span>';
+    }
+  </script>
+</section>
+`,
+
+  // 11. GLOBAL CRO OVERLAYS (Sticky Bar, Social Proof Toast, Cookie Banner)
+  croOverlays: `
+<!-- Sticky Mobile CTA Bar -->
+<div id="sticky-mobile-cta" class="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-slate-200 p-3 sm:hidden flex items-center justify-between shadow-lg">
+  <div class="flex flex-col pr-3">
+    <span class="text-xs font-semibold text-slate-900 leading-tight">{{STICKY_CTA_TITLE}}</span>
+    <span class="text-[10px] text-slate-500">{{STICKY_CTA_SUBTITLE}}</span>
+  </div>
+  <a href="#form" class="h-9 px-5 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-xs shadow-md whitespace-nowrap">
+    {{STICKY_CTA_BTN}}
+  </a>
+</div>
+
+<!-- Social Proof Toast -->
+<div id="social-proof-toast" class="fixed bottom-5 left-5 z-40 max-w-sm rounded-lg bg-slate-900 text-white p-3.5 shadow-xl border border-white/10 text-xs hidden sm:flex items-center gap-3 transition-opacity duration-300">
+  <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0 font-bold">✓</div>
+  <div class="flex-1">
+    <p class="font-medium text-slate-200" id="toast-message">{{SOCIAL_PROOF_MSG}}</p>
+    <p class="text-[10px] text-slate-400" id="toast-time">Только что</p>
+  </div>
+  <button type="button" onclick="document.getElementById('social-proof-toast').remove()" class="text-slate-400 hover:text-white p-1 text-sm leading-none cursor-pointer">&times;</button>
+</div>
+
+<!-- Cookie Consent Banner -->
+<div id="cookie-consent-banner" class="fixed bottom-4 right-4 z-40 max-w-md bg-white border border-slate-200 rounded-xl p-4 shadow-xl text-xs text-slate-600 hidden items-center justify-between gap-4">
+  <p class="leading-normal">Мы используем файлы cookie для персонализации сервиса и аналитики.</p>
+  <button type="button" onclick="acceptCookies()" class="px-4 py-2 {{THEME_RADIUS_BTN}} bg-slate-900 hover:bg-black text-white text-xs font-semibold whitespace-nowrap shadow-sm cursor-pointer">
+    Принять
+  </button>
+</div>
+
+<script>
+function acceptCookies() {
+  if (typeof localStorage !== 'undefined') localStorage.setItem('cookie_consent', 'accepted');
+  var b = document.getElementById('cookie-consent-banner');
+  if (b) b.remove();
+}
+(function() {
+  if (typeof localStorage !== 'undefined' && !localStorage.getItem('cookie_consent')) {
+    var b = document.getElementById('cookie-consent-banner');
+    if (b) {
+      b.classList.remove('hidden');
+      b.classList.add('flex');
+    }
+  }
+  var toast = document.getElementById('social-proof-toast');
+  if (toast) {
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      setTimeout(function() { if (toast && toast.parentNode) toast.remove(); }, 500);
+    }, 8000);
+  }
+})();
+</script>
 `
 };

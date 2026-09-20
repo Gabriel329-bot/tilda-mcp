@@ -411,6 +411,118 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     expect(footPkg.fields.code).toContain('text-[#1D1D1F]');
     expect(footPkg.fields.code).toContain('border-black/[0.06]');
   });
+
+  it('Scenario 12: Commercial Upgrade (Marquee, Timeline, Calculator, Billing Toggle, Schema.org, CRO)', async () => {
+    const { SeoOrchestrator } = await import('../src/generators/seo-orchestrator.js');
+    const {
+      packageHeroSection,
+      packageMarqueeSection,
+      packageTimelineSection,
+      packageCalculatorSection,
+      packagePricingSection,
+    } = await import('../src/generators/block-packager.js');
+
+    // 1. Marquee / Social proof
+    const marqueePkg = packageMarqueeSection(['Kubernetes', 'Redis', 'Docker', 'ClickHouse'], 'linear');
+    expect(marqueePkg.tplId).toBe('T123');
+    expect(marqueePkg.fields.code).toContain('animate-[marquee_25s_linear_infinite]');
+    expect(marqueePkg.fields.code).toContain('Kubernetes');
+    expect(marqueePkg.fields.code).toContain('ClickHouse');
+
+    // 2. Timeline / Roadmap
+    const timelinePkg = packageTimelineSection(
+      {
+        title: 'Этапы развертывания',
+        descr: 'От аудита до продакшена',
+        steps: [
+          { step: '01', title: 'Аудит сети', descr: 'Анализ топологии и трафика' },
+          { step: '02', title: 'Настройка кластера', descr: 'Конфигурация нод K8s' },
+        ],
+      },
+      'linear'
+    );
+    expect(timelinePkg.tplId).toBe('T123');
+    expect(timelinePkg.fields.code).toContain('id="timeline"');
+    expect(timelinePkg.fields.code).toContain('Этапы развертывания');
+    expect(timelinePkg.fields.code).toContain('01');
+    expect(timelinePkg.fields.code).toContain('Аудит сети');
+    expect(timelinePkg.fields.code).toContain('Настройка кластера');
+
+    // 3. Interactive Calculator
+    const calcPkg = packageCalculatorSection(
+      { title: 'Конфигуратор узлов', descr: 'Расчет бюджета' },
+      'linear'
+    );
+    expect(calcPkg.tplId).toBe('T123');
+    expect(calcPkg.fields.code).toContain('id="calculator"');
+    expect(calcPkg.fields.code).toContain('calc-slider');
+    expect(calcPkg.fields.code).toContain('updateCalculator');
+    expect(calcPkg.fields.code).toContain('calc-total');
+
+    // 4. Pricing with Billing Switcher (-20% yearly discount)
+    const pricingPkg = packagePricingSection(
+      {
+        title: 'Тарифы на сервис',
+        plans: [
+          { name: 'Бизнес', price: '10 000 ₽', features: ['Кластер K8s', 'SLA 99.9%'], is_featured: true },
+        ],
+      },
+      'linear'
+    );
+    expect(pricingPkg.tplId).toBe('T123');
+    expect(pricingPkg.fields.code).toContain('toggleBillingPeriod()');
+    expect(pricingPkg.fields.code).toContain('data-month="10 000 ₽"');
+    expect(pricingPkg.fields.code).toContain('data-year="8 000 ₽"');
+    expect(pricingPkg.fields.code).toContain('-20%');
+
+    // 5. Schema.org JSON-LD & Meta tags
+    const jsonLd = SeoOrchestrator.generateJsonLd({
+      title: 'DevTools Cloud',
+      descr: 'Next-gen cloud telemetry and orchestration',
+      faq: {
+        items: [{ question: 'Как оплатить?', answer: 'Картой или безналичным расчетом.' }],
+      },
+      pricing: {
+        plans: [{ name: 'Бизнес', price: '10000 ₽' }],
+      },
+    });
+    expect(jsonLd).toContain('<script type="application/ld+json">');
+    expect(jsonLd).toContain('"@type": "Organization"');
+    expect(jsonLd).toContain('"@type": "FAQPage"');
+    expect(jsonLd).toContain('Как оплатить?');
+    expect(jsonLd).toContain('"@type": "Product"');
+    expect(jsonLd).toContain('"@type": "Offer"');
+    expect(jsonLd).toContain('10000');
+
+    const metaTags = SeoOrchestrator.generateMetaTags({
+      title: 'DevTools Cloud',
+      descr: 'Cloud telemetry',
+      image: 'https://images.unsplash.com/test-og.jpg',
+      url: 'https://devtools.cloud',
+    });
+    expect(metaTags).toContain('og:title');
+    expect(metaTags).toContain('og:description');
+    expect(metaTags).toContain('og:image');
+    expect(metaTags).toContain('twitter:card');
+
+    // 6. Hero enhancements (critical preload + CRO overlays)
+    const heroPkg = packageHeroSection(
+      {
+        title: 'DevTools Cloud Engine',
+        descr: 'High performance',
+        backgroundUrl: 'https://images.unsplash.com/hero-bg.jpg',
+      },
+      'tech',
+      true,
+      'linear'
+    );
+    expect(heroPkg.fields.code).toContain('<link rel="preload" as="image" href="https://images.unsplash.com/hero-bg.jpg">');
+    expect(heroPkg.fields.code).toContain('application/ld+json');
+    expect(heroPkg.fields.code).toContain('id="sticky-mobile-cta"');
+    expect(heroPkg.fields.code).toContain('id="social-proof-toast"');
+    expect(heroPkg.fields.code).toContain('id="cookie-consent-banner"');
+    expect(heroPkg.fields.code).toContain('acceptCookies()');
+  });
 });
 
 
