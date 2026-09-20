@@ -216,6 +216,16 @@ export class TildaHttpClient {
             this.cookies.set(cookie.name, cookie);
           }
         }
+
+        // Auto-detect dominant domain from cookies
+        const hasRuSession = relevantCookies.some(
+          (c: any) => (c.name === 'userid' || c.name === 'hash') && c.domain && c.domain.includes('tilda.ru')
+        );
+        if (hasRuSession) {
+          this.baseUrl = 'https://tilda.ru';
+          this.commondomain = 'tilda.ru';
+        }
+
         this.refreshCookieHeader();
       }
     } catch (err: any) {
@@ -356,87 +366,87 @@ export class TildaHttpClient {
 
   /**
    * Helper to perform authenticated HTTP requests.
-   * Includes exponential retry for transient failures (429, 502, 503, 504, network errors).
+   * Features:
+   * - Automatic exponential retry with backoff for HTTP 429, 502, 503, 504 and network errors.
+   * - Up to 3 attempts with delays of 1000ms and 2500ms.
+   * - Sets User-Agent, Cookie header, and Referer.
+   * - Automatically updates internal cookie jar from Set-Cookie response headers.
    */
   private async request(
-    endpoint: string,
+    url: string,
     options: {
-      method?: 'GET' | 'POST';
+      method?: string;
       body?: URLSearchParams | string;
       headers?: Record<string, string>;
       referer?: string;
       redirect?: RequestRedirect;
     } = {}
   ): Promise<Response> {
-    let url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
-    if (this.baseUrl.includes('tilda.ru')) {
-      url = url.replace('https://tilda.cc', 'https://tilda.ru').replace('http://tilda.cc', 'https://tilda.ru');
-    } else {
-      url = url.replace('https://tilda.ru', 'https://tilda.cc').replace('http://tilda.ru', 'https://tilda.cc');
-    }
-
+    const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
     const method = options.method || 'GET';
 
-    const headers: Record<string, string> = {
-      'Cookie': this.cookieHeader,
+    const reqHeaders: Record<string, string> = {
       'User-Agent': this.userAgent,
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
       'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
       'Cache-Control': 'no-cache',
       'Pragma': 'no-cache',
-      'X-Requested-With': 'XMLHttpRequest',
-      'Origin': this.baseUrl,
-      'Referer': options.referer || `${this.baseUrl}/projects/`,
-      'Sec-Ch-Ua': '"Brave";v="130", "Chromium";v="130", "Not_A Brand";v="24"',
-      'Sec-Ch-Ua-Mobile': '?0',
-      'Sec-Ch-Ua-Platform': '"Windows"',
-      'Sec-Fetch-Dest': 'empty',
-      'Sec-Fetch-Mode': 'cors',
-      'Sec-Fetch-Site': 'same-origin',
-      'Connection': 'keep-alive',
       ...options.headers,
     };
 
-    if (method === 'POST' && !headers['Content-Type']) {
-      headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+    if (this.cookieHeader) {
+      reqHeaders['Cookie'] = this.cookieHeader;
+    }
+
+    if (options.referer) {
+      reqHeaders['Referer'] = options.referer;
+    }
+
+    if (method === 'POST') {
+      reqHeaders['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8';
+      reqHeaders['X-Requested-With'] = 'XMLHttpRequest';
     }
 
     let lastError: Error | null = null;
+    let lastResponse: Response | null = null;
+
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const res = await fetch(url, {
+        const res = await fetch(fullUrl, {
           method,
-          headers,
-          body: options.body ? options.body.toString() : undefined,
+          headers: reqHeaders,
+          body: options.body,
           redirect: options.redirect || 'manual',
         });
 
-        // 3. Сохранение Set-Cookie (Cookie Jar)
+        // Always process any cookies received from Tilda response
         this.handleResponseCookies(res);
 
-        // Check for retryable HTTP status
+        // If status code is retryable (429, 502, 503, 504) and we have attempts left, backoff and retry
         if (RETRYABLE_STATUSES.has(res.status) && attempt < MAX_RETRIES) {
-          const delayMs = RETRY_DELAYS_MS[attempt - 1] || 2500;
+          const delay = RETRY_DELAYS_MS[attempt - 1] || 1000;
           console.warn(
-            `[Retry] ${method} ${url} returned HTTP ${res.status}, attempt ${attempt}/${MAX_RETRIES}. Retrying in ${delayMs}ms...`
+            `[Retry] ${method} ${fullUrl} returned HTTP ${res.status}, attempt ${attempt}/${MAX_RETRIES}. Retrying in ${delay}ms...`
           );
-          await new Promise((r) => setTimeout(r, delayMs));
+          await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
 
         return res;
       } catch (err: any) {
-        lastError = new Error(`[TildaHttpClient] Network error on ${method} ${url}: ${err.message}`);
+        lastError = err;
         if (attempt < MAX_RETRIES) {
-          const delayMs = RETRY_DELAYS_MS[attempt - 1] || 2500;
+          const delay = RETRY_DELAYS_MS[attempt - 1] || 1000;
           console.warn(
-            `[Retry] ${method} ${url} network error: ${err.message}. Attempt ${attempt}/${MAX_RETRIES}. Retrying in ${delayMs}ms...`
+            `[Retry] ${method} ${fullUrl} network error: ${err.message}. Attempt ${attempt}/${MAX_RETRIES}. Retrying in ${delay}ms...`
           );
-          await new Promise((r) => setTimeout(r, delayMs));
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
         }
       }
     }
 
+    if (lastResponse) return lastResponse;
     throw lastError || new Error(`[TildaHttpClient] All ${MAX_RETRIES} attempts exhausted for ${method} ${url}`);
   }
 
@@ -448,45 +458,29 @@ export class TildaHttpClient {
    */
   public async checkAuth(): Promise<boolean> {
     const url = `${this.baseUrl}/projects/`;
-    const res = await this.request(url, {
+    let res = await this.request(url, {
       method: 'GET',
       redirect: 'manual',
     });
 
-    const loc = res.headers.get('location') || '';
+    let loc = res.headers.get('location') || '';
+
+    // If redirected to alternate domain (tilda.ru <-> tilda.cc)
+    if ((res.status === 301 || res.status === 302) && (loc.includes('tilda.ru') || loc.includes('tilda.cc'))) {
+      const altBase = loc.includes('tilda.ru') ? 'https://tilda.ru' : 'https://tilda.cc';
+      this.baseUrl = altBase;
+      this.commondomain = new URL(altBase).hostname;
+      res = await this.request(`${altBase}/projects/`, {
+        method: 'GET',
+        redirect: 'manual',
+      });
+      loc = res.headers.get('location') || '';
+    }
 
     if (res.status === 301 || res.status === 302 || loc.includes('/login/')) {
-      // Проверяем альтернативный домен (tilda.ru / tilda.cc)
-      const altBase = this.baseUrl.includes('tilda.cc') ? 'https://tilda.ru' : 'https://tilda.cc';
-      try {
-        const altRes = await fetch(`${altBase}/projects/`, {
-          headers: {
-            'Cookie': this.cookieHeader,
-            'User-Agent': this.userAgent,
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-            'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-          },
-          redirect: 'manual',
-        });
-
-        if (altRes.status === 200) {
-          this.baseUrl = altBase;
-          this.commondomain = new URL(altBase).hostname;
-          console.log(`[Auth] Сессия активна на домене ${this.baseUrl} (HTTP 200 OK)`);
-          return true;
-        }
-      } catch {}
-
       console.log('[Auth Debug] URL ответа:', res.url || url);
       console.log('[Auth Debug] HTTP статус:', res.status);
       console.log('[Auth Debug] Location заголовок:', loc);
-      console.log(
-        '[Auth Debug] Заголовок Cookie, который был отправлен:',
-        this.cookieHeader.slice(0, 80) + (this.cookieHeader.length > 80 ? '...' : '')
-      );
-
       throw new Error('[AUTH_EXPIRED] Сессия Tilda недействительна. Обновите cookie: запустите npm run login или обновите .env');
     }
 
@@ -494,11 +488,6 @@ export class TildaHttpClient {
       console.log('[Auth Debug] URL ответа:', res.url || url);
       console.log('[Auth Debug] HTTP статус:', res.status);
       console.log('[Auth Debug] Location заголовок:', loc);
-      console.log(
-        '[Auth Debug] Заголовок Cookie, который был отправлен:',
-        this.cookieHeader.slice(0, 80) + (this.cookieHeader.length > 80 ? '...' : '')
-      );
-
       throw new Error(
         `[AUTH_EXPIRED] Сессия Tilda недействительна (HTTP ${res.status}${loc ? ` -> ${loc}` : ''}). Обновите cookie: запустите npm run login или обновите .env`
       );
@@ -575,10 +564,10 @@ export class TildaHttpClient {
     // 4. Проверка авторизации перед стартом
     await this.checkAuth();
 
-    let editorUrl = `https://tilda.cc/page/?pageid=${pageId}`;
+    let editorUrl = `${this.baseUrl}/page/?pageid=${pageId}`;
     let res = await this.request(editorUrl, {
       method: 'GET',
-      referer: 'https://tilda.cc/projects/',
+      referer: `${this.baseUrl}/projects/`,
     });
 
     // Follow legitimate in-domain redirects (up to 3 hops)
@@ -597,14 +586,11 @@ export class TildaHttpClient {
         );
       }
 
-      // 1. Единый домен: строго https://tilda.cc
-      editorUrl = loc.startsWith('http')
-        ? loc.replace('https://tilda.ru', 'https://tilda.cc')
-        : `https://tilda.cc${loc}`;
+      editorUrl = loc.startsWith('http') ? loc : `${this.baseUrl}${loc}`;
 
       res = await this.request(editorUrl, {
         method: 'GET',
-        referer: 'https://tilda.cc/projects/',
+        referer: `${this.baseUrl}/projects/`,
       });
     }
 
@@ -768,7 +754,10 @@ export class TildaHttpClient {
     await this.pace(80, 120);
 
     // Sanitize all user-supplied text content (titles, descriptions, FAQ, reviews, etc.)
+    // Preserve raw code embeds (T123) without HTML entity substitutions
     const fields = sanitizeFields(rawFields) as BlockFields;
+    if (rawFields.code !== undefined) fields.code = rawFields.code;
+    if (rawFields.rawcod !== undefined) fields.rawcod = rawFields.rawcod;
 
     // 1. Resolve block template ID and style preset
     const tplId = String(fields.tplId || fields.tplid || this.recordTplMap.get(recordId) || '');
@@ -851,12 +840,18 @@ export class TildaHttpClient {
       scalarFields.anchor = 'reviews';
     }
 
+    // Clear default currency prefix for pricing to prevent "$0 ₽"
+    if (isPricing) {
+      if (scalarFields.price_cur === undefined) scalarFields.price_cur = '';
+      if (scalarFields.currency === undefined) scalarFields.currency = '';
+    }
+
     // =========================================================================
     // SMART DEFAULTS: 1. Cover Hero (CR16 / CR30 / CR15 - tplId 205, 204, 18)
     // =========================================================================
     if (isHero) {
       if (preset === 'dark') {
-        // High density darkening mask for dark theme
+        // High density darkening mask for dark theme (85%)
         scalarFields.overlaycolor = fields.overlaycolor || fields.filtercolor || '#0A0C10';
         scalarFields.overlaycolor2 = fields.overlaycolor2 || fields.filtercolor2 || '#0A0C10';
         scalarFields.filtercolor = scalarFields.overlaycolor;
@@ -866,7 +861,7 @@ export class TildaHttpClient {
             ? String(fields.overlayopacity)
             : fields.filteropacity !== undefined
             ? String(fields.filteropacity)
-            : '75';
+            : '85';
         scalarFields.overlayopacity2 =
           fields.overlayopacity2 !== undefined
             ? String(fields.overlayopacity2)
@@ -890,7 +885,7 @@ export class TildaHttpClient {
           bgcolor: scalarFields.btn_bg_color,
           color: scalarFields.buttontitle_color,
           size: 'md',
-          radius: '12px',
+          radius: '100px',
           fontweight: '700',
         };
         scalarFields.button_styles = JSON.stringify(btnObj);
@@ -918,7 +913,7 @@ export class TildaHttpClient {
           bordercolor: scalarFields.btn2_border_color,
           bordersize: scalarFields.button2bordersize,
           size: 'md',
-          radius: '12px',
+          radius: '100px',
         };
         scalarFields.button2_styles = JSON.stringify(btn2Obj);
       } else if (preset === 'minimal') {
@@ -1018,7 +1013,7 @@ export class TildaHttpClient {
         bgcolor: scalarFields.btn_bg_color,
         color: scalarFields.buttontitle_color,
         size: 'md',
-        radius: '12px',
+        radius: isDark ? '100px' : '12px',
         fontweight: '700',
       };
       scalarFields.button_styles = JSON.stringify(formBtnObj);

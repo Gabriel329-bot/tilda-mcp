@@ -15,7 +15,7 @@ const server = new McpServer({
 export const NICHE_PRESETS: Record<string, string> = {
   interior: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1920&q=80',
   auto: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1920&q=80',
-  it: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80',
+  it: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=80',
   food: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=80',
 };
 
@@ -114,6 +114,7 @@ server.tool(
       }),
       metrics: z.object({
         title: z.string(),
+        descr: z.string().optional(),
         items: z
           .array(
             z.object({
@@ -217,6 +218,11 @@ server.tool(
       try {
       // === Begin transactional build ===
       await client.initSession(targetPageId);
+
+      // Clean existing blocks if re-generating an existing page
+      if (!isNewlyCreated) {
+        await client.deleteAllRecords(targetPageId);
+      }
 
       const updateTasks: (() => Promise<any>)[] = [];
       const sectionsGenerated: string[] = [];
@@ -324,6 +330,7 @@ server.tool(
       updateTasks.push(() =>
         client.updateBlock(targetPageId, metrRec, {
           btitle: sections.metrics.title,
+          bdescr: sections.metrics.descr !== undefined ? sections.metrics.descr : ' ',
           rec_anchor: 'metrics',
           bg_color: theme.bgPrimary,
           title_color: theme.textPrimary,
@@ -343,7 +350,7 @@ server.tool(
       );
       sectionsGenerated.push('metrics');
 
-      // 5. Optional Pricing (PR01 / PL120N - tplId 1072) with #pricing anchor
+      // 5. Optional Pricing (PR01 / PL120N - tplId 1072 / PR04 - tplId 776) with #pricing anchor
       if (sections.pricing) {
         const priceRec = await client.addBlock(targetPageId, 'PR01');
         updateTasks.push(() =>
@@ -351,6 +358,8 @@ server.tool(
             btitle: sections.pricing!.title,
             bdescr: sections.pricing!.descr || '',
             rec_anchor: 'pricing',
+            price_cur: '',
+            currency: '',
             bg_color: theme.bgSecondary,
             title_color: theme.textPrimary,
             descr_color: theme.textSecondary,
@@ -365,6 +374,8 @@ server.tool(
               ls: String(i + 1),
               li_title: p.name,
               li_price: p.price,
+              li_price_cur: '',
+              li_currency: '',
               li_subtitle: p.period || '',
               li_descr: Array.isArray(p.features)
                 ? `<ul>${p.features.map((f) => `<li>${f}</li>`).join('')}</ul>`
