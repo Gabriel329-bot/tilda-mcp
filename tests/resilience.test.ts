@@ -523,6 +523,81 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     expect(heroPkg.fields.code).toContain('id="cookie-consent-banner"');
     expect(heroPkg.fields.code).toContain('acceptCookies()');
   });
+
+  it('Scenario 13: Phase 1 Stabilization (Dehardcoded Success Text, Phone Validation, Honeypot, CRO flags)', async () => {
+    const { packageContactSection, packageHeroSection } = await import(
+      '../src/generators/block-packager.js'
+    );
+    const { TemplateEngine } = await import('../src/generators/template-engine.js');
+
+    // 1. Default success text, honeypot, autocomplete and phone validation
+    const contactPkgDefault = packageContactSection(
+      { title: 'Заказать консультацию', descr: 'Оставьте заявку' },
+      'https://api.example.com/lead',
+      'dark'
+    );
+    expect(contactPkgDefault.tplId).toBe('T123');
+    expect(contactPkgDefault.fields.code).toContain('name="_hp_company"');
+    expect(contactPkgDefault.fields.code).toContain('autocomplete="name"');
+    expect(contactPkgDefault.fields.code).toContain('autocomplete="tel" inputmode="tel"');
+    expect(contactPkgDefault.fields.code).toContain('autocomplete="email"');
+    expect(contactPkgDefault.fields.code).toContain('phoneDigits.length !== 11');
+    expect(contactPkgDefault.fields.code).toContain('id="phone-error"');
+    expect(contactPkgDefault.fields.code).toContain('id="lead-form-error"');
+    expect(contactPkgDefault.fields.code).toContain(
+      'Наш специалист свяжется с вами в ближайшее время по указанному номеру телефона.'
+    );
+
+    // 2. Custom success text via parameter or data
+    const contactPkgCustom = packageContactSection(
+      { title: 'B2B Заявка', success_message: 'Менеджер свяжется с вами в течение 10 минут.' },
+      undefined,
+      'apple',
+      'Персональный куратор перезвонит вам за 5 минут.'
+    );
+    expect(contactPkgCustom.fields.code).toContain(
+      'Персональный куратор перезвонит вам за 5 минут.'
+    );
+    expect(contactPkgCustom.fields.code).not.toContain(
+      'Наш специалист свяжется с вами в ближайшее время'
+    );
+
+    // 3. Safe-area insets & Cookie Banner mobile offset
+    const croDefault = TemplateEngine.renderCroOverlays();
+    expect(croDefault).toContain('padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px))');
+    expect(croDefault).toContain('padding-bottom: max(12px, env(safe-area-inset-bottom, 12px))');
+    expect(croDefault).toContain('bottom-20 sm:bottom-4');
+
+    // 4. CRO flags filtering
+    const heroWithCroFlags = packageHeroSection(
+      { title: 'Enterprise Cloud' },
+      'telecom',
+      false,
+      'dark',
+      undefined,
+      {
+        enable_sticky_bar: false,
+        enable_social_toast: false,
+        enable_cookie_banner: true,
+      }
+    );
+    expect(heroWithCroFlags.fields.code).not.toContain('id="sticky-mobile-cta"');
+    expect(heroWithCroFlags.fields.code).not.toContain('id="social-proof-toast"');
+    expect(heroWithCroFlags.fields.code).toContain('id="cookie-consent-banner"');
+
+    // 5. Completely disabled CRO layer
+    const heroCroDisabled = packageHeroSection(
+      { title: 'Enterprise Cloud' },
+      'telecom',
+      false,
+      'dark',
+      undefined,
+      { enabled: false }
+    );
+    expect(heroCroDisabled.fields.code).not.toContain('id="sticky-mobile-cta"');
+    expect(heroCroDisabled.fields.code).not.toContain('id="social-proof-toast"');
+    expect(heroCroDisabled.fields.code).not.toContain('id="cookie-consent-banner"');
+  });
 });
 
 

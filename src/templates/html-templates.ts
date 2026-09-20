@@ -215,21 +215,24 @@ export const TEMPLATES = {
 
     <div id="lead-form-container" class="p-8 {{THEME_RADIUS_CARD}} bg-[#111111] border border-white/10">
       <form id="lead-form" onsubmit="handleLeadSubmit(event)" class="space-y-4">
+        <input type="text" name="_hp_company" style="display:none !important;" tabindex="-1" autocomplete="off" />
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Ваше имя</label>
-          <input type="text" name="name" required placeholder="Константин" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+          <input type="text" name="name" autocomplete="name" required placeholder="Константин" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Номер телефона</label>
-          <input type="tel" id="lead-phone" name="phone" required placeholder="+7 (___) ___-__-__" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+          <input type="tel" id="lead-phone" name="phone" autocomplete="tel" inputmode="tel" required placeholder="+7 (___) ___-__-__" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+          <p id="phone-error" class="hidden text-rose-500 text-xs mt-1.5 font-medium">Пожалуйста, укажите корректный номер телефона (11 цифр)</p>
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Email для обратной связи</label>
-          <input type="email" name="email" required placeholder="name@domain.com" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+          <input type="email" name="email" autocomplete="email" required placeholder="name@domain.com" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
         </div>
         <button type="submit" class="w-full h-12 mt-2 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-lg cursor-pointer">
           {{BTN_TEXT}}
         </button>
+        <div id="lead-form-error" class="hidden text-rose-500 text-xs mt-3 text-center font-medium bg-rose-500/10 border border-rose-500/20 py-2 px-3 rounded-lg"></div>
         <p class="text-[11px] text-slate-500 text-center mt-3">
           Нажимая кнопку, вы соглашаетесь на обработку персональных данных.
         </p>
@@ -243,6 +246,13 @@ function initLeadPhoneMask() {
   if (phoneEl && typeof IMask !== 'undefined') {
     IMask(phoneEl, { mask: '+{7} (000) 000-00-00' });
   }
+  if (phoneEl) {
+    phoneEl.addEventListener('input', function() {
+      phoneEl.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
+      var err = document.getElementById('phone-error');
+      if (err) err.classList.add('hidden');
+    });
+  }
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initLeadPhoneMask);
@@ -253,6 +263,44 @@ if (document.readyState === 'loading') {
 async function handleLeadSubmit(event) {
   event.preventDefault();
   var form = event.target;
+
+  // Honeypot anti-spam check: silent drop
+  var hp = form.querySelector('input[name="_hp_company"]');
+  if (hp && hp.value) {
+    var container = document.getElementById('lead-form-container');
+    if (container) {
+      container.innerHTML = \`
+        <div class="py-8 px-4 text-center flex flex-col items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-2 tracking-tight">Заявка принята!</h3>
+          <p class="text-sm text-slate-400 max-w-sm mb-8 leading-relaxed">
+            {{FORM_SUCCESS_TEXT}}
+          </p>
+        </div>
+      \`;
+    }
+    return;
+  }
+
+  // Clear previous general error
+  var generalErr = document.getElementById('lead-form-error');
+  if (generalErr) generalErr.classList.add('hidden');
+
+  // Strict 11-digit phone check
+  var phoneEl = document.getElementById('lead-phone');
+  if (phoneEl) {
+    var phoneDigits = phoneEl.value.replace(/\\D/g, '');
+    if (phoneDigits.length !== 11) {
+      phoneEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+      var phoneErr = document.getElementById('phone-error');
+      if (phoneErr) phoneErr.classList.remove('hidden');
+      phoneEl.focus();
+      return;
+    }
+  }
+
   var btn = form.querySelector('button[type="submit"]');
   var originalBtnText = btn.innerHTML;
   btn.innerHTML = '<span class="animate-spin inline-block mr-2">⏳</span> Отправка...';
@@ -262,6 +310,7 @@ async function handleLeadSubmit(event) {
     var webhook = '{{WEBHOOK_URL}}';
     if (webhook && webhook !== '{{WEBHOOK_URL}}' && webhook.startsWith('http')) {
       var formData = new FormData(form);
+      formData.delete('_hp_company');
       var payload = Object.fromEntries(formData.entries());
       await fetch(webhook, {
         method: 'POST',
@@ -281,7 +330,7 @@ async function handleLeadSubmit(event) {
           </div>
           <h3 class="text-2xl font-bold text-white mb-2 tracking-tight">Заявка принята!</h3>
           <p class="text-sm text-slate-400 max-w-sm mb-8 leading-relaxed">
-            Менеджер приемной комиссии свяжется с вами в ближайшее время по указанному номеру телефона.
+            {{FORM_SUCCESS_TEXT}}
           </p>
           <button type="button" onclick="location.reload()" class="inline-flex items-center justify-center px-6 h-11 {{THEME_RADIUS_BTN}} bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition-all duration-200 border border-white/10 cursor-pointer">
             Отправить еще одну
@@ -293,7 +342,11 @@ async function handleLeadSubmit(event) {
     console.error('Lead submit error:', err);
     btn.innerHTML = originalBtnText;
     btn.disabled = false;
-    alert('Произошла ошибка при отправке заявки. Пожалуйста, попробуйте снова.');
+    var errorEl = document.getElementById('lead-form-error');
+    if (errorEl) {
+      errorEl.textContent = 'Произошла ошибка при отправке заявки. Пожалуйста, попробуйте снова.';
+      errorEl.classList.remove('hidden');
+    }
   }
 }
 </script>
@@ -322,21 +375,24 @@ async function handleLeadSubmit(event) {
 
     <div id="lead-form-container" class="p-8 {{THEME_RADIUS_CARD}} bg-white border border-black/[0.08] shadow-sm">
       <form id="lead-form" onsubmit="handleLeadSubmit(event)" class="space-y-4">
+        <input type="text" name="_hp_company" style="display:none !important;" tabindex="-1" autocomplete="off" />
         <div>
           <label class="block text-xs font-medium text-slate-500 mb-1.5">Ваше имя</label>
-          <input type="text" name="name" required placeholder="Константин" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+          <input type="text" name="name" autocomplete="name" required placeholder="Константин" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-500 mb-1.5">Номер телефона</label>
-          <input type="tel" id="lead-phone" name="phone" required placeholder="+7 (___) ___-__-__" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+          <input type="tel" id="lead-phone" name="phone" autocomplete="tel" inputmode="tel" required placeholder="+7 (___) ___-__-__" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+          <p id="phone-error" class="hidden text-rose-500 text-xs mt-1.5 font-medium">Пожалуйста, укажите корректный номер телефона (11 цифр)</p>
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-500 mb-1.5">Email для обратной связи</label>
-          <input type="email" name="email" required placeholder="name@domain.com" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
+          <input type="email" name="email" autocomplete="email" required placeholder="name@domain.com" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm focus:bg-white focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
         </div>
         <button type="submit" class="w-full h-12 mt-2 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer">
           {{BTN_TEXT}}
         </button>
+        <div id="lead-form-error" class="hidden text-rose-500 text-xs mt-3 text-center font-medium bg-rose-500/10 border border-rose-500/20 py-2 px-3 rounded-lg"></div>
         <p class="text-[11px] text-slate-400 text-center mt-3">
           Нажимая кнопку, вы соглашаетесь на обработку персональных данных.
         </p>
@@ -350,6 +406,13 @@ function initLeadPhoneMask() {
   if (phoneEl && typeof IMask !== 'undefined') {
     IMask(phoneEl, { mask: '+{7} (000) 000-00-00' });
   }
+  if (phoneEl) {
+    phoneEl.addEventListener('input', function() {
+      phoneEl.classList.remove('border-rose-500', 'ring-2', 'ring-rose-500/20');
+      var err = document.getElementById('phone-error');
+      if (err) err.classList.add('hidden');
+    });
+  }
 }
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initLeadPhoneMask);
@@ -360,6 +423,44 @@ if (document.readyState === 'loading') {
 async function handleLeadSubmit(event) {
   event.preventDefault();
   var form = event.target;
+
+  // Honeypot anti-spam check: silent drop
+  var hp = form.querySelector('input[name="_hp_company"]');
+  if (hp && hp.value) {
+    var container = document.getElementById('lead-form-container');
+    if (container) {
+      container.innerHTML = \`
+        <div class="py-8 px-4 text-center flex flex-col items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <h3 class="text-2xl font-bold text-[#1D1D1F] mb-2 tracking-tight">Заявка принята!</h3>
+          <p class="text-sm text-slate-500 max-w-sm mb-8 leading-relaxed">
+            {{FORM_SUCCESS_TEXT}}
+          </p>
+        </div>
+      \`;
+    }
+    return;
+  }
+
+  // Clear previous general error
+  var generalErr = document.getElementById('lead-form-error');
+  if (generalErr) generalErr.classList.add('hidden');
+
+  // Strict 11-digit phone check
+  var phoneEl = document.getElementById('lead-phone');
+  if (phoneEl) {
+    var phoneDigits = phoneEl.value.replace(/\\D/g, '');
+    if (phoneDigits.length !== 11) {
+      phoneEl.classList.add('border-rose-500', 'ring-2', 'ring-rose-500/20');
+      var phoneErr = document.getElementById('phone-error');
+      if (phoneErr) phoneErr.classList.remove('hidden');
+      phoneEl.focus();
+      return;
+    }
+  }
+
   var btn = form.querySelector('button[type="submit"]');
   var originalBtnText = btn.innerHTML;
   btn.innerHTML = '<span class="animate-spin inline-block mr-2">⏳</span> Отправка...';
@@ -369,6 +470,7 @@ async function handleLeadSubmit(event) {
     var webhook = '{{WEBHOOK_URL}}';
     if (webhook && webhook !== '{{WEBHOOK_URL}}' && webhook.startsWith('http')) {
       var formData = new FormData(form);
+      formData.delete('_hp_company');
       var payload = Object.fromEntries(formData.entries());
       await fetch(webhook, {
         method: 'POST',
@@ -388,7 +490,7 @@ async function handleLeadSubmit(event) {
           </div>
           <h3 class="text-2xl font-bold text-[#1D1D1F] mb-2 tracking-tight">Заявка принята!</h3>
           <p class="text-sm text-slate-500 max-w-sm mb-8 leading-relaxed">
-            Менеджер свяжется с вами в ближайшее время по указанному номеру телефона.
+            {{FORM_SUCCESS_TEXT}}
           </p>
           <button type="button" onclick="location.reload()" class="inline-flex items-center justify-center px-6 h-11 {{THEME_RADIUS_BTN}} bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium text-sm transition-all duration-200 border border-slate-200 cursor-pointer">
             Отправить еще одну
@@ -400,7 +502,11 @@ async function handleLeadSubmit(event) {
     console.error('Lead submit error:', err);
     btn.innerHTML = originalBtnText;
     btn.disabled = false;
-    alert('Произошла ошибка при отправке заявки. Пожалуйста, попробуйте снова.');
+    var errorEl = document.getElementById('lead-form-error');
+    if (errorEl) {
+      errorEl.textContent = 'Произошла ошибка при отправке заявки. Пожалуйста, попробуйте снова.';
+      errorEl.classList.remove('hidden');
+    }
   }
 }
 </script>
@@ -552,8 +658,9 @@ async function handleLeadSubmit(event) {
 
   // 11. GLOBAL CRO OVERLAYS (Sticky Bar, Social Proof Toast, Cookie Banner)
   croOverlays: `
+<style>@media (max-width: 639px) { body { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important; } }</style>
 <!-- Sticky Mobile CTA Bar -->
-<div id="sticky-mobile-cta" class="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-slate-200 p-3 sm:hidden flex items-center justify-between shadow-lg">
+<div id="sticky-mobile-cta" style="padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));" class="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-slate-200 p-3 sm:hidden flex items-center justify-between shadow-lg">
   <div class="flex flex-col pr-3">
     <span class="text-xs font-semibold text-slate-900 leading-tight">{{STICKY_CTA_TITLE}}</span>
     <span class="text-[10px] text-slate-500">{{STICKY_CTA_SUBTITLE}}</span>
@@ -574,7 +681,7 @@ async function handleLeadSubmit(event) {
 </div>
 
 <!-- Cookie Consent Banner -->
-<div id="cookie-consent-banner" class="fixed bottom-4 right-4 z-40 max-w-md bg-white border border-slate-200 rounded-xl p-4 shadow-xl text-xs text-slate-600 hidden items-center justify-between gap-4">
+<div id="cookie-consent-banner" class="fixed bottom-20 sm:bottom-4 right-4 z-40 max-w-md bg-white border border-slate-200 rounded-xl p-4 shadow-xl text-xs text-slate-600 hidden items-center justify-between gap-4">
   <p class="leading-normal">Мы используем файлы cookie для персонализации сервиса и аналитики.</p>
   <button type="button" onclick="acceptCookies()" class="px-4 py-2 {{THEME_RADIUS_BTN}} bg-slate-900 hover:bg-black text-white text-xs font-semibold whitespace-nowrap shadow-sm cursor-pointer">
     Принять

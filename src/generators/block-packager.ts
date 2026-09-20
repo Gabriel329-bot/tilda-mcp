@@ -278,9 +278,10 @@ export function packagePricingSection(data: any, theme?: string | ThemeTokens): 
 export function packageContactSection(
   data: any,
   webhookUrl?: string,
-  theme?: string | ThemeTokens
+  theme?: string | ThemeTokens,
+  successMessage?: string
 ): T123BlockPackage {
-  const html = TemplateEngine.renderContact(data, webhookUrl, theme);
+  const html = TemplateEngine.renderContact(data, webhookUrl, theme, successMessage);
   return {
     tplId: 'T123',
     fields: {

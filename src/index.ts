@@ -222,6 +222,8 @@ server.tool(
           descr: z.string().optional(),
           btn_text: z.string().optional(),
           badge: z.string().optional(),
+          success_message: z.string().optional().describe('Custom text shown after successful form submission'),
+          webhook_url: z.string().optional().describe('Webhook endpoint URL for lead submissions'),
           inputs: z
             .array(
               z.object({
@@ -232,6 +234,17 @@ server.tool(
               })
             )
             .optional(),
+        })
+        .optional(),
+      cro: z
+        .object({
+          enable_sticky_bar: z.boolean().default(true).optional(),
+          enable_social_toast: z.boolean().default(false).optional(),
+          enable_cookie_banner: z.boolean().default(true).optional(),
+          stickyTitle: z.string().optional(),
+          stickySubtitle: z.string().optional(),
+          stickyBtn: z.string().optional(),
+          socialProofMsg: z.string().optional(),
         })
         .optional(),
       footer: z
@@ -326,7 +339,8 @@ server.tool(
           descr: sections.hero.descr || '',
           faq: sections.faq,
           pricing: sections.pricing,
-        }
+        },
+        sections.cro
       );
       const heroRec = await client.addBlock(targetPageId, heroPackage.tplId);
       updateTasks.push(() =>
@@ -442,7 +456,8 @@ server.tool(
         const formPackage = packageContactSection(
           sections.form,
           (sections.form as any).webhook_url,
-          presetKey
+          presetKey,
+          (sections.form as any).success_message
         );
         const formRec = await client.addBlock(targetPageId, formPackage.tplId);
         updateTasks.push(() =>
