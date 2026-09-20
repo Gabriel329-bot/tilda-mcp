@@ -108,9 +108,10 @@
 
 | Пресет | Стиль и назначение | Акцент (`accent`) | Карточки (`radiusCard`) | Кнопки (`radiusBtn`) | Холст (`bgPage`) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`dji`** | Промышленный минимализм | `#0070D5` | `rounded-[4px]` | `rounded-[1408px]` | Белый / `#F8FAFC` |
+| **`femme`** / **`wellness`** | «Тихая роскошь» / Велнес, эстетика | `#242320` | `rounded-2xl` | `rounded-full` | `#F7F4EE` (кашемир) / `#FFFFFF` |
+| **`linear`** | Минималистичный SaaS / DevTools Cloud | `#5E6AD2` | `rounded-lg` | `rounded-lg` | `#090D16` / `#111624` |
+| **`dji`** | Промышленный минимализм DJI | `#0070D5` | `rounded-[4px]` | `rounded-[1408px]` | Белый / `#F8FAFC` |
 | **`dark`** | Неоновый киберпанк / High-Tech | `#06B6D4` | `rounded-xl` | `rounded-xl` | `#0B0F17` / `#111827` |
-| **`linear`** | Минималистичный SaaS / DevTools | `#5E6AD2` | `rounded-lg` | `rounded-lg` | `bg-slate-50` / `#FFFFFF` |
 | **`light`** / **`apple`** | Премиальный дизайн Apple-style | `#0071E3` | `rounded-2xl` | `rounded-full` | `#F5F5F7` / `#FFFFFF` |
 | **`minimal`** | Чистый журнал / Корпоративный | `#0F172A` | `rounded-md` | `rounded-md` | `#FFFFFF` / `#F8FAFC` |
 | **`warm`** | Теплый крафт / Рестораны | `#EA580C` | `rounded-xl` | `rounded-full` | `#FFFDF9` / `#FFF8F0` |
@@ -131,7 +132,7 @@
 ```
 tilda-mcp/
 ├── scripts/                   # Сервисные утилиты, тесты сети, скрапперы
-│   ├── scratch/               # Изолированные исследовательские скрипты
+│   ├── scratch/               # Скрипты деплоя и проверок верстки
 │   ├── fast-build.ts          # CLI-сборщик в ускоренном режиме
 │   └── deploy-real.ts         # Скрипт деплоя на тестовую страницу
 ├── src/
@@ -143,23 +144,28 @@ tilda-mcp/
 │   │   ├── tilda-http-client.ts # Высокоскоростной HTTP-клиент с CSRF и ретраями
 │   │   ├── tilda-driver.ts    # Fallback-клиент на базе Playwright
 │   │   └── tilda-client.ts    # Фасадный клиент
-│   ├── generators/            # Движки сборки, валидации и SEO
+│   ├── generators/            # Движки сборки, валидации, SEO и оркестрации
 │   │   ├── template-engine.ts # Рендерер шаблонов и резолвер дизайн-токенов
 │   │   ├── block-packager.ts  # Упаковка секций в пакеты T123
+│   │   ├── multipage-orchestrator.ts # Двухпроходная сборка многостраничных сайтов
+│   │   ├── preview-builder.ts # Локальный рендерер без расхода квот Tilda
+│   │   ├── analytics-orchestrator.ts # Яндекс.Метрика + GA4 микро-диспетчер
+│   │   ├── femme-builder.ts   # Студийный велнес-билдер (Femme Sculpt)
 │   │   ├── seo-orchestrator.ts# Schema.org JSON-LD и OpenGraph генератор
-│   │   ├── guardrails.ts      # CSS-скоупинг и валидация безопасности
-│   │   └── media-orchestrator.ts # Загрузка и привязка фоновых медиа
+│   │   └── guardrails.ts      # CSS-скоупинг и валидация безопасности
 │   ├── styles/                # Пресеты оформления
 │   │   └── presets.ts
 │   ├── templates/             # Эталонная верстка Template Vault
-│   │   ├── html-templates.ts  # Студийные HTML/Tailwind шаблоны
+│   │   ├── html-templates.ts  # Модульные HTML/Tailwind блоки
+│   │   ├── femme-templates.ts # 14 премиальных экранов «тихой роскоши»
 │   │   ├── icons.ts           # Векторный справочник Lucide SVG
-│   │   └── theme-tokens.ts    # Спецификация и токен-сеты
+│   │   └── theme-tokens.ts    # Спецификация и токен-сеты (включая femme)
 │   ├── types/                 # Общие TypeScript интерфейсы
 │   ├── config.ts              # Конфигурация окружения
 │   └── index.ts               # Главная точка входа MCP-сервера
-└── tests/                     # Интеграционные тесты (vitest)
-    └── resilience.test.ts     # 13 комплексных сценариев проверки
+└── tests/                     # Комплексные тесты (28 проверок)
+    ├── resilience.test.ts     # 17 сценариев устойчивости, ретраев и отката
+    └── visual.test.ts         # 11 визуальных проверок верстки на Playwright
 ```
 
 ---
@@ -255,6 +261,13 @@ tilda-mcp/
 * Обновление цен в тарифах (`pricing`).
 * Изменение вопросов в `faq`.
 * Корректировка заголовков и CTA в `hero`.
+
+### 5. Студийный генератор `FemmeBuilder` (Велнес и «тихая роскошь»)
+Специализированный генератор премиальных лендингов для онлайн-курсов, пилатеса и эстетической медицины:
+* **Журнальная верстка (14 экранов):** Шапка с переключателем `RU | EN`, Hero с оффером, Манифест философии, Сетка преимуществ `(01)`–`(06)`, Контрастная диагностика «Для кого», Крупные цифры курса, Программа по неделям, Видео-мокап, 3 шага обучения, Тарифы с диплинками в Telegram (`?start=tariff_base`), Блок автора (Polestar Pilates), Отзывы, FAQ-аккордеон и финальный CTA с офертой.
+* **Типографика «тихой роскоши»:** антиква *Cormorant Garamond* (с курсивными терракотовыми акцентами) в паре с чистым гротеском *Manrope*.
+* **Mobile-First верификация:** гарантированное отсутствие горизонтального скролла (`scrollWidth <= innerWidth`) на 375px (iPhone) и корректная отработка Safe Area Insets.
+* **Готовый деплой:** `npx tsx scripts/scratch/deploy_femme_landing.ts` (автономный деплой на Tilda за ~14 секунд).
 
 ---
 
