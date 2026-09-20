@@ -84,8 +84,9 @@ export class TemplateEngine {
       const borderClass = isFeatured
         ? `border-2 border-[${activeTheme.accent}] shadow-md bg-white`
         : `border ${activeTheme.borderLight}`;
-      const badge = isFeatured
-        ? `<span class="px-2.5 py-0.5 ${activeTheme.radiusCard} bg-blue-50 text-[${activeTheme.accent}] text-xs font-semibold uppercase">Выбор года</span>`
+      const badgeText = plan.badge || (isFeatured ? 'Рекомендуем' : '');
+      const badge = badgeText
+        ? `<span class="px-2.5 py-0.5 ${activeTheme.radiusCard} bg-[${activeTheme.accent}]/10 text-[${activeTheme.accent}] text-xs font-semibold uppercase">${badgeText}</span>`
         : '';
       const btnStyle = isFeatured
         ? `bg-[${activeTheme.accent}] hover:bg-[${activeTheme.accentHover}] text-white shadow-md`
@@ -106,7 +107,7 @@ export class TemplateEngine {
         .replace('{{PERIOD}}', plan.period || '')
         .replace('{{FEATURES_LIST}}', featuresList)
         .replace('{{BTN_STYLE}}', btnStyle)
-        .replace('{{BTN_TEXT}}', plan.btn_text || 'Подать заявку');
+        .replace('{{BTN_TEXT}}', plan.btn_text || 'Выбрать тариф');
     }).join('\n');
 
     const html = TEMPLATES.pricingContainer
@@ -135,11 +136,46 @@ export class TemplateEngine {
 
   static renderContact(data: any, webhookUrl?: string, theme?: ThemeTokens | string): string {
     const activeTheme = resolveTheme(theme, data);
+    const badge = data.badge || 'Контакты и связь';
+    const contactsHtml = data.contacts
+      ? data.contacts.map((c: any) => `
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[${activeTheme.accent}]">${c.icon || '•'}</span>
+          <span>${c.text}</span>
+        </div>
+      `).join('')
+      : `
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[${activeTheme.accent}]">📍</span>
+          <span>${data.address || 'Офис разработки & Cloud HQ'}</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[${activeTheme.accent}]">📞</span>
+          <span>${data.phone || '+7 (495) 800-20-40'}</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[${activeTheme.accent}]">✉️</span>
+          <span>${data.email || 'support@devtools.cloud'}</span>
+        </div>
+      `;
+
     const html = TEMPLATES.contactSection
-      .replace('{{TITLE}}', data.title || 'Запись на ознакомительный визит')
+      .replace('{{BADGE}}', badge)
+      .replace('{{TITLE}}', data.title || 'Связаться с нами')
       .replace('{{DESCR}}', data.descr || '')
-      .replace('{{BTN_TEXT}}', data.btn_text || 'Записаться на визит')
+      .replace('{{CONTACTS_LIST}}', contactsHtml)
+      .replace('{{BTN_TEXT}}', data.btn_text || 'Отправить заявку')
       .replace('{{WEBHOOK_URL}}', webhookUrl || data.webhook_url || '');
+
+    return applyTokens(html, activeTheme);
+  }
+
+  static renderFooter(projectName: string, theme?: ThemeTokens | string): string {
+    const activeTheme = resolveTheme(theme);
+    const year = new Date().getFullYear().toString();
+    const html = TEMPLATES.footerSection
+      .replace(/\{\{PROJECT_NAME\}\}/g, projectName || 'DevTools Cloud')
+      .replace(/\{\{YEAR\}\}/g, year);
 
     return applyTokens(html, activeTheme);
   }

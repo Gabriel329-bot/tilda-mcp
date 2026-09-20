@@ -6,7 +6,7 @@ export const TEMPLATES = {
   <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black"></div>
   
   <div class="relative z-10 max-w-5xl mx-auto px-6 py-24 text-center flex flex-col items-center">
-    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[{{THEME_ACCENT}}] text-xs font-semibold tracking-wider uppercase mb-8">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[{{THEME_ACCENT}}]/10 border border-[{{THEME_ACCENT}}]/20 text-[{{THEME_ACCENT}}] text-xs font-semibold tracking-wider uppercase mb-8">
       <span class="w-2 h-2 rounded-full bg-[{{THEME_ACCENT}}] animate-pulse"></span>
       {{BADGE}}
     </div>
@@ -126,8 +126,8 @@ export const TEMPLATES = {
 <section id="form" class="w-full py-24 bg-black text-white {{THEME_FONT}} border-t border-white/10">
   <div class="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
     <div>
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-[{{THEME_ACCENT}}] text-xs font-semibold uppercase tracking-wider mb-6">
-        Приемная комиссия
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[{{THEME_ACCENT}}]/10 text-[{{THEME_ACCENT}}] text-xs font-semibold uppercase tracking-wider mb-6">
+        {{BADGE}}
       </div>
       <h2 class="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-white">
         {{TITLE}}
@@ -136,18 +136,7 @@ export const TEMPLATES = {
         {{DESCR}}
       </p>
       <div class="space-y-4 text-sm text-slate-300">
-        <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[{{THEME_ACCENT}}]">📍</span>
-          <span>г. Москва, ул. Большая Спасская, д. 15</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[{{THEME_ACCENT}}]">📞</span>
-          <span>+7 (495) 123-45-67</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[{{THEME_ACCENT}}]">✉️</span>
-          <span>priem@kc54.ru</span>
-        </div>
+        {{CONTACTS_LIST}}
       </div>
     </div>
 
@@ -264,5 +253,21 @@ async function handleLeadSubmit(event) {
     {{ANSWER}}
   </div>
 </details>
+`,
+
+  // 7. FOOTER SECTION (Премиальный темный подвал, моноширинная версия, копирайт)
+  footerSection: `
+<footer class="w-full py-12 bg-[#0B0F17] text-slate-400 {{THEME_FONT}} border-t border-slate-800">
+  <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+    <div class="flex items-center gap-3">
+      <span class="text-lg font-bold tracking-tight text-white">{{PROJECT_NAME}}</span>
+      <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">v2.4</span>
+    </div>
+    
+    <div class="text-xs text-slate-500 text-center sm:text-right">
+      © {{YEAR}} {{PROJECT_NAME}}. Все права защищены. High-performance infrastructure.
+    </div>
+  </div>
+</footer>
 `
 };

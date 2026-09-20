@@ -189,21 +189,191 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     const djiCss = getPresetCss('dji');
     expect(djiCss).toBe(DJI_PRESET_CSS);
 
-    // Buttons: 1408px pill, Sky CTA #0070D5, 500 weight, 36-40px height
+    // Buttons: 1408px pill, Sky CTA #0070D5, 600 weight, 40px height
     expect(djiCss).toContain('border-radius: 1408px !important');
     expect(djiCss).toContain('background-color: #0070D5 !important');
-    expect(djiCss).toContain('font-weight: 500 !important');
-    expect(djiCss).toContain('min-height: 36px !important');
+    expect(djiCss).toContain('font-weight: 600 !important');
+    expect(djiCss).toContain('min-height: 40px !important');
 
-    // Cards: 4px flat border-radius, #EDEDED background, box-shadow: none
-    expect(djiCss).toContain('background-color: #EDEDED !important');
-    expect(djiCss).toContain('border-radius: 4px !important');
-    expect(djiCss).toContain('box-shadow: none !important');
-    expect(djiCss).toContain('border-color: #3B63A9 !important');
+    // Cards: 8px border-radius, #F4F5F7 background, neutral 1px solid #E2E8F0 border
+    expect(djiCss).toContain('background-color: #F4F5F7 !important');
+    expect(djiCss).toContain('border: 1px solid #E2E8F0 !important');
+    expect(djiCss).toContain('border-radius: 8px !important');
 
-    // Badges and list markers
-    expect(djiCss).toContain('color: #3B63A9 !important');
+    // Metrics designer layout: pure black numbers and neutral cards
+    expect(djiCss).toContain('.t1050__col');
+    expect(djiCss).toContain('font-size: 48px !important');
+    expect(djiCss).toContain('font-weight: 700 !important');
+    expect(djiCss).toContain('color: #000000 !important');
+
+    // Pricing action buttons and list markers
+    expect(djiCss).toContain('.t776__btn, .t-pricing__button');
     expect(djiCss).toContain('\\2014\\00a0');
   });
+
+  it('Scenario 8: Template Vault (Hero, Bento, Metrics, Pricing) & SVG Icons', async () => {
+    const { ICONS, getIcon } = await import('../src/templates/icons.js');
+    const { TemplateEngine } = await import('../src/generators/template-engine.js');
+    const { packageHeroSection, packageFeaturesSection, packageMetricsSection, packagePricingSection } =
+      await import('../src/builder/block-packager.js');
+
+    // 1. Icons dictionary
+    expect(ICONS.server).toContain('<svg');
+    expect(ICONS.network).toContain('<svg');
+    expect(ICONS.shield).toContain('<svg');
+    expect(ICONS.cpu).toContain('<svg');
+    expect(ICONS.speed).toContain('<svg');
+    expect(ICONS.check).toContain('<svg');
+    expect(getIcon('Магистральные серверы')).toBe(ICONS.server);
+    expect(getIcon('Защита трафика')).toBe(ICONS.shield);
+    expect(getIcon('Маршрутизация сетей')).toBe(ICONS.network);
+
+    // 2. Hero template rendering
+    const heroPkg = packageHeroSection({
+      title: 'Инженерный центр',
+      descr: 'Стенды ВОЛС и сети',
+      btn1: { text: 'Начать', href: '#form' },
+    });
+    expect(heroPkg.tplId).toBe('T123');
+    expect(heroPkg.fields.code).toContain('cdn.tailwindcss.com');
+    expect(heroPkg.fields.code).toContain('Инженерный центр');
+    expect(heroPkg.fields.code).toContain('text-white');
+
+    // 3. Bento Features rendering
+    const featPkg = packageFeaturesSection({
+      title: 'Оснащение',
+      descr: 'Лаборатории',
+      items: [{ title: 'Серверные кластеры', descr: 'Стоечные шасси' }],
+    });
+    expect(featPkg.tplId).toBe('T123');
+    expect(featPkg.fields.code).toContain('id="features"');
+    expect(featPkg.fields.code).toContain(ICONS.server);
+    expect(featPkg.fields.code).toContain('Серверные кластеры');
+
+    // 4. Metrics rendering
+    const metrPkg = packageMetricsSection({
+      title: 'Цифры',
+      items: [{ title: '50+', descr: 'лабораторий' }],
+    });
+    expect(metrPkg.tplId).toBe('T123');
+    expect(metrPkg.fields.code).toContain('id="metrics"');
+    expect(metrPkg.fields.code).toContain('50+');
+    expect(metrPkg.fields.code).toContain('text-slate-950');
+
+    // 5. Pricing rendering
+    const pricePkg = packagePricingSection({
+      title: 'Тарифы',
+      plans: [{ name: 'Бюджет', price: '0 ₽', period: 'год', features: ['Обучение'], is_featured: true }],
+    });
+    expect(pricePkg.tplId).toBe('T123');
+    expect(pricePkg.fields.code).toContain('id="pricing"');
+    expect(pricePkg.fields.code).toContain('Бюджет');
+    expect(pricePkg.fields.code).toContain('0 ₽');
+    expect(pricePkg.fields.code).toContain(ICONS.check);
+
+    // 6. Contact section rendering
+    const { packageContactSection, packageFaqSection } = await import('../src/builder/block-packager.js');
+    const contactPkg = packageContactSection({
+      title: 'Запись на визит',
+      descr: 'Оставьте контактные данные',
+      btn_text: 'Записаться',
+    });
+    expect(contactPkg.tplId).toBe('T123');
+    expect(contactPkg.fields.code).toContain('id="form"');
+    expect(contactPkg.fields.code).toContain('Запись на визит');
+    expect(contactPkg.fields.code).toContain('+7 (___) ___-__-__');
+    expect(contactPkg.fields.code).toContain('IMask');
+    expect(contactPkg.fields.code).toContain('handleLeadSubmit');
+    expect(contactPkg.fields.code).toContain('scroll-behavior: smooth');
+    expect(contactPkg.fields.code).toContain('Записаться');
+
+    // 7. FAQ section rendering
+    const faqPkg = packageFaqSection({
+      title: 'Часто задаваемые вопросы',
+      descr: 'Регламенты поступления',
+      items: [
+        { question: 'Учитываются ли результаты ОГЭ?', answer: 'Прием ведется по среднему баллу.' },
+      ],
+    });
+    expect(faqPkg.tplId).toBe('T123');
+    expect(faqPkg.fields.code).toContain('id="faq"');
+    expect(faqPkg.fields.code).toContain('<details class="group');
+    expect(faqPkg.fields.code).toContain('Учитываются ли результаты ОГЭ?');
+    expect(faqPkg.fields.code).toContain('Прием ведется по среднему баллу.');
+  });
+
+  it('Scenario 9: Dynamic Theme Switcher & Design Tokens (dji, dark, linear)', async () => {
+    const { getThemeTokens, THEMES } = await import('../src/templates/theme-tokens.js');
+    const { TemplateEngine } = await import('../src/generators/template-engine.js');
+    const { packageHeroSection, packagePricingSection } = await import('../src/builder/block-packager.js');
+
+    // 1. Theme token definitions
+    expect(THEMES.dji.accent).toBe('#0070D5');
+    expect(THEMES.dji.radiusBtn).toBe('rounded-[1408px]');
+    expect(THEMES.dji.radiusCard).toBe('rounded-[4px]');
+
+    expect(THEMES.linear.accent).toBe('#5E6AD2');
+    expect(THEMES.linear.radiusBtn).toBe('rounded-lg');
+    expect(THEMES.linear.radiusCard).toBe('rounded-lg');
+
+    expect(THEMES.dark.accent).toBe('#06B6D4');
+    expect(THEMES.dark.radiusBtn).toBe('rounded-xl');
+    expect(THEMES.dark.radiusCard).toBe('rounded-xl');
+
+    // 2. Render Hero with Linear Theme
+    const linearHero = packageHeroSection(
+      { title: 'Linear SaaS Platform', descr: 'Next gen issue tracking' },
+      'tech',
+      false,
+      'linear'
+    );
+    expect(linearHero.fields.code).toContain('#5E6AD2');
+    expect(linearHero.fields.code).toContain('rounded-lg');
+    expect(linearHero.fields.code).not.toContain('rounded-[1408px]');
+
+    // 3. Render Hero with Dark Theme
+    const darkHero = packageHeroSection(
+      { title: 'Cyber Dark Agency', descr: 'High tech agency' },
+      'tech',
+      false,
+      'dark'
+    );
+    expect(darkHero.fields.code).toContain('#06B6D4');
+    expect(darkHero.fields.code).toContain('rounded-xl');
+
+    // 4. Render Pricing with Linear Theme
+    const linearPricing = packagePricingSection(
+      {
+        title: 'Linear Plans',
+        plans: [{ name: 'Standard', price: '10 $', features: ['Unlimited tasks'], is_featured: true }],
+      },
+      'linear'
+    );
+    expect(linearPricing.fields.code).toContain('#5E6AD2');
+    expect(linearPricing.fields.code).toContain('rounded-lg');
+    expect(linearPricing.fields.code).not.toContain('rounded-[1408px]');
+  });
+
+  it('Scenario 10: Custom Studio Footer Section (T123)', async () => {
+    const { TemplateEngine } = await import('../src/generators/template-engine.js');
+    const { packageFooterSection } = await import('../src/builder/block-packager.js');
+
+    // 1. TemplateEngine.renderFooter
+    const footerHtml = TemplateEngine.renderFooter('DevTools Cloud');
+    expect(footerHtml).toContain('<footer');
+    expect(footerHtml).toContain('DevTools Cloud');
+    expect(footerHtml).toContain('bg-[#0B0F17]');
+    expect(footerHtml).toContain('border-slate-800');
+    expect(footerHtml).toContain('v2.4');
+    expect(footerHtml).toContain(new Date().getFullYear().toString());
+
+    // 2. packageFooterSection returns T123 package
+    const footerPkg = packageFooterSection('DevTools Cloud', 'linear');
+    expect(footerPkg.tplId).toBe('T123');
+    expect(footerPkg.fields.code).toContain('DevTools Cloud');
+    expect(footerPkg.fields.code).toContain('bg-[#0B0F17]');
+    expect(footerPkg.fields.rawcod).toBe(footerPkg.fields.code);
+  });
 });
+
 

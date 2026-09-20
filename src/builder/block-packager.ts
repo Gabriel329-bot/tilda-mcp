@@ -242,6 +242,18 @@ export function packageFaqSection(data: any, theme?: string | ThemeTokens): T123
   };
 }
 
+export type FooterBlockPackage = T123BlockPackage;
 
-
-
+/**
+ * Packages the Footer section into a custom studio T123 block.
+ */
+export function packageFooterSection(projectName: string, theme?: string | ThemeTokens): T123BlockPackage {
+  const html = TemplateEngine.renderFooter(projectName, theme);
+  return {
+    tplId: 'T123',
+    fields: {
+      code: html,
+      rawcod: html,
+    },
+  };
+}

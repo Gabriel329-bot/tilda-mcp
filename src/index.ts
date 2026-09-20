@@ -12,6 +12,7 @@ import {
   packagePricingSection,
   packageContactSection,
   packageFaqSection,
+  packageFooterSection,
 } from './builder/block-packager.js';
 
 // Initialize MCP Server
@@ -40,7 +41,7 @@ export const SECTION_TPL_MAP: Record<string, string[]> = {
   testimonials: ['533', '605', '441'],
   faq: ['131', '585', '746'],
   form: ['131', '678'],
-  footer: ['144'],
+  footer: ['131', '144'],
   custom_css: ['131'],
 };
 
@@ -95,6 +96,7 @@ server.tool(
       hero: z.object({
         title: z.string(),
         descr: z.string(),
+        badge: z.string().optional(),
         btn_text: z.string().optional(),
         btn_href: z.string().optional(),
         btn2_text: z.string().optional(),
@@ -112,7 +114,7 @@ server.tool(
           })
           .optional(),
         bg_image_url: z.string().optional().describe('Cover background image URL'),
-        niche: z.enum(['interior', 'auto', 'it', 'food']).optional().describe('Niche preset for background'),
+        niche: z.string().optional().describe('Niche preset for background'),
       }),
       features: z.object({
         title: z.string(),
@@ -178,27 +180,32 @@ server.tool(
           descr: z.string().optional(),
           items: z.array(
             z.object({
-              question: z.string(),
-              answer: z.string(),
+              question: z.string().optional(),
+              answer: z.string().optional(),
+              title: z.string().optional(),
+              descr: z.string().optional(),
             })
           ),
         })
         .optional(),
-      form: z.object({
-        title: z.string(),
-        descr: z.string(),
-        btn_text: z.string(),
-        inputs: z
-          .array(
-            z.object({
-              type: z.string().describe('Field type: email, text, phone, textarea'),
-              title: z.string(),
-              placeholder: z.string().optional(),
-              required: z.boolean().optional(),
-            })
-          )
-          .optional(),
-      }),
+      form: z
+        .object({
+          title: z.string().optional(),
+          descr: z.string().optional(),
+          btn_text: z.string().optional(),
+          badge: z.string().optional(),
+          inputs: z
+            .array(
+              z.object({
+                type: z.string().describe('Field type: email, text, phone, textarea'),
+                title: z.string(),
+                placeholder: z.string().optional(),
+                required: z.boolean().optional(),
+              })
+            )
+            .optional(),
+        })
+        .optional(),
       footer: z
         .object({
           title: z.string().optional(),
@@ -367,32 +374,29 @@ server.tool(
       }
 
       // 8. Contact / Form (Template Vault: Contact Section via T123)
-      const formPackage = packageContactSection(
-        sections.form,
-        (sections.form as any).webhook_url,
-        presetKey
-      );
-      const formRec = await client.addBlock(targetPageId, formPackage.tplId);
-      updateTasks.push(() =>
-        client.updateBlock(targetPageId, formRec, formPackage.fields)
-      );
-      sectionsGenerated.push('form');
-
-      // 9. Optional Footer (FT101 - tplId 144)
-      if (sections.footer) {
-        const footRec = await client.addBlock(targetPageId, 'FT101');
+      if (sections.form) {
+        const formPackage = packageContactSection(
+          sections.form,
+          (sections.form as any).webhook_url,
+          presetKey
+        );
+        const formRec = await client.addBlock(targetPageId, formPackage.tplId);
         updateTasks.push(() =>
-          client.updateBlock(targetPageId, footRec, {
-            title: sections.footer!.title || '',
-            descr: sections.footer!.descr || sections.footer!.text || '',
-            bg_color: presetKey === 'dji' ? '#000000' : (sections.faq ? theme.bgSecondary : theme.bgPrimary),
-            title_color: presetKey === 'dji' ? '#FFFFFF' : theme.textPrimary,
-            descr_color: presetKey === 'dji' ? '#94A3B8' : theme.textSecondary,
-            color: presetKey === 'dji' ? '#FFFFFF' : theme.textPrimary,
-            colormode: presetKey === 'dji' ? 'dark' : colormode,
-            theme: presetKey,
-            style_preset: presetKey,
-          })
+          client.updateBlock(targetPageId, formRec, formPackage.fields)
+        );
+        sectionsGenerated.push('form');
+      }
+
+      // 9. Footer (Template Vault: Dark Studio Footer via T123)
+      if (sections.footer) {
+        const projectName =
+          sections.footer.title ||
+          sections.header?.logo_text ||
+          effectiveTitle;
+        const footPackage = packageFooterSection(projectName, presetKey);
+        const footRec = await client.addBlock(targetPageId, footPackage.tplId);
+        updateTasks.push(() =>
+          client.updateBlock(targetPageId, footRec, footPackage.fields)
         );
         sectionsGenerated.push('footer');
       }
@@ -643,6 +647,10 @@ server.tool(
           });
         }
       } else if (section === 'footer') {
+        const projectName = content.projectName || content.title || content.name || 'DevTools Cloud';
+        const footPkg = packageFooterSection(projectName, style_preset);
+        fields.code = footPkg.fields.code;
+        fields.rawcod = footPkg.fields.rawcod;
         if (content.title) fields.title = content.title;
         if (content.descr) fields.descr = content.descr;
       } else if (section === 'custom_css') {
