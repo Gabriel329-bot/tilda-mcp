@@ -844,12 +844,23 @@ export class TildaHttpClient {
     if (isPricing) {
       if (scalarFields.price_cur === undefined) scalarFields.price_cur = '';
       if (scalarFields.currency === undefined) scalarFields.currency = '';
+      if (!scalarFields.buttontitle) scalarFields.buttontitle = 'Подать заявление';
+      if (!scalarFields.btn_text) scalarFields.btn_text = 'Подать заявление';
+      if (!scalarFields.buttonlink) scalarFields.buttonlink = '#form';
     }
 
     // =========================================================================
     // SMART DEFAULTS: 1. Cover Hero (CR16 / CR30 / CR15 - tplId 205, 204, 18)
     // =========================================================================
     if (isHero) {
+      // STRICT FILTER: Disallow default furniture/interior images in Hero
+      const techHeroDefault = 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=80';
+      if (!scalarFields.img || scalarFields.img.includes('photo-1618221195710') || scalarFields.img.includes('photo-1600585154340') || scalarFields.img.includes('furniture')) {
+        scalarFields.img = techHeroDefault;
+        scalarFields.bgimg = techHeroDefault;
+        scalarFields['img-tuinfo-cdnurl'] = techHeroDefault;
+      }
+
       if (preset === 'dji') {
         // DJI Engineering Minimalist Hero: Clean black mask (85%), Sky CTA pill button, transparent white-bordered secondary button
         scalarFields.overlaycolor = fields.overlaycolor || fields.filtercolor || '#000000';

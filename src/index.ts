@@ -5,6 +5,14 @@ import { TildaHttpClient } from './driver/tilda-http-client.js';
 import { performance } from 'perf_hooks';
 import { STYLE_PRESETS, StylePresetName, DARK_PRESET_CSS, DJI_PRESET_CSS, getPresetCss } from './styles/presets.js';
 
+import {
+  packageHeroSection,
+  packageFeaturesSection,
+  packageMetricsSection,
+  packagePricingSection,
+  packageContactSection,
+} from './builder/block-packager.js';
+
 // Initialize MCP Server
 const server = new McpServer({
   name: 'tilda-mcp',
@@ -13,22 +21,24 @@ const server = new McpServer({
 
 // Niche presets for Hero background images
 export const NICHE_PRESETS: Record<string, string> = {
-  interior: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1920&q=80',
+  interior: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=80',
   auto: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1920&q=80',
   it: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=80',
+  tech: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1920&q=80',
+  telecom: 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=1920&q=80',
   food: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1920&q=80',
 };
 
 // Semantic mapping: section name -> candidate Tilda block template IDs
 export const SECTION_TPL_MAP: Record<string, string[]> = {
   header: ['2083', '1272', '133'],
-  hero: ['205', '204', '18'],
-  features: ['491'],
-  metrics: ['1050'],
-  pricing: ['776', '1072', '301', '142'],
+  hero: ['131', '205', '204', '18'],
+  features: ['131', '491'],
+  metrics: ['131', '1050'],
+  pricing: ['131', '776', '1072', '301', '142'],
   testimonials: ['533', '605', '441'],
   faq: ['585', '746'],
-  form: ['678'],
+  form: ['131', '678'],
   footer: ['144'],
   custom_css: ['131'],
 };
@@ -265,128 +275,40 @@ server.tool(
         sectionsGenerated.push('header');
       }
 
-      // Determine hero background image: explicit URL -> niche preset -> interior default
-      const bgImg =
-        sections.hero.bg_image_url ||
-        (sections.hero.niche && NICHE_PRESETS[sections.hero.niche]) ||
-        NICHE_PRESETS.interior;
-
-      // 2. Hero (CR30 / CR16 - tplId 205)
-      const heroRec = await client.addBlock(targetPageId, 'CR30');
-      const heroBtn1Title = sections.hero.btn1?.text || sections.hero.btn_text;
-      const heroBtn1Link = sections.hero.btn1?.href || sections.hero.btn_href || '#form';
-      const heroBtn2Title = sections.hero.btn2?.text || sections.hero.btn2_text;
-      const heroBtn2Link = sections.hero.btn2?.href || sections.hero.btn2_href || '#features';
-
+      // 2. Hero Section (Template Vault: HD Cover + Tailwind CSS via T123)
+      const heroPackage = packageHeroSection(
+        sections.hero,
+        sections.hero.niche || 'telecom',
+        true
+      );
+      const heroRec = await client.addBlock(targetPageId, heroPackage.tplId);
       updateTasks.push(() =>
-        client.updateBlock(targetPageId, heroRec, {
-          title: sections.hero.title,
-          descr: sections.hero.descr,
-          buttontitle: heroBtn1Title,
-          buttonlink: heroBtn1Link,
-          buttontitle2: heroBtn2Title,
-          buttonlink2: heroBtn2Link,
-          img: bgImg,
-          bgimg: bgImg,
-          title_color: presetKey === 'dji' || presetKey === 'dark' ? '#FFFFFF' : theme.textPrimary,
-          descr_color: presetKey === 'dji' || presetKey === 'dark' ? '#CBD5E1' : theme.textSecondary,
-          color: presetKey === 'dji' || presetKey === 'dark' ? '#FFFFFF' : theme.textPrimary,
-          btn_bg_color: theme.accentBtnBg,
-          buttontitle_color: theme.accentBtnText,
-          colormode,
-          theme: presetKey,
-        })
+        client.updateBlock(targetPageId, heroRec, heroPackage.fields)
       );
       sectionsGenerated.push('hero');
 
-      // 3. Features (FR104 / FR205 - tplId 491) with #features anchor
-      const featRec = await client.addBlock(targetPageId, 'FR104');
+      // 3. Features (Template Vault: Bento Features Grid via T123)
+      const featPackage = packageFeaturesSection(sections.features);
+      const featRec = await client.addBlock(targetPageId, featPackage.tplId);
       updateTasks.push(() =>
-        client.updateBlock(targetPageId, featRec, {
-          btitle: sections.features.title,
-          bdescr: sections.features.descr || '',
-          rec_anchor: 'features',
-          bg_color: theme.bgSecondary,
-          title_color: theme.textPrimary,
-          descr_color: theme.textSecondary,
-          color: theme.textPrimary,
-          li_title_color: theme.textPrimary,
-          li_descr_color: theme.textSecondary,
-          colormode,
-          theme: presetKey,
-          list: sections.features.items.map((item, i) => ({
-            lid: String(i + 1),
-            ls: String(i + 1),
-            li_title: item.title,
-            li_descr: item.descr,
-            li_img: item.img_url || '',
-          })),
-        })
+        client.updateBlock(targetPageId, featRec, featPackage.fields)
       );
       sectionsGenerated.push('features');
 
-      // 4. Metrics (NM01 / FR402N - tplId 1050) with #metrics anchor
-      const metrRec = await client.addBlock(targetPageId, 'NM01');
+      // 4. Metrics (Template Vault: Monochromatic Metrics via T123)
+      const metrPackage = packageMetricsSection(sections.metrics);
+      const metrRec = await client.addBlock(targetPageId, metrPackage.tplId);
       updateTasks.push(() =>
-        client.updateBlock(targetPageId, metrRec, {
-          btitle: sections.metrics.title,
-          bdescr: sections.metrics.descr !== undefined ? sections.metrics.descr : ' ',
-          rec_anchor: 'metrics',
-          bg_color: presetKey === 'dji' ? '#FFFFFF' : theme.bgPrimary,
-          title_color: theme.textPrimary,
-          descr_color: theme.textSecondary,
-          color: theme.textPrimary,
-          li_title_color: theme.textPrimary,
-          li_descr_color: theme.textSecondary,
-          colormode,
-          theme: presetKey,
-          list: sections.metrics.items.map((item, i) => ({
-            lid: String(i + 1),
-            ls: String(i + 1),
-            li_title: item.num || item.title,
-            li_descr: item.descr,
-          })),
-        })
+        client.updateBlock(targetPageId, metrRec, metrPackage.fields)
       );
       sectionsGenerated.push('metrics');
 
-      // 5. Optional Pricing (PR01 / PL120N - tplId 1072 / PR04 - tplId 776) with #pricing anchor
+      // 5. Optional Pricing (Template Vault: Pricing Monolith via T123)
       if (sections.pricing) {
-        const priceRec = await client.addBlock(targetPageId, 'PR01');
+        const pricePackage = packagePricingSection(sections.pricing);
+        const priceRec = await client.addBlock(targetPageId, pricePackage.tplId);
         updateTasks.push(() =>
-          client.updateBlock(targetPageId, priceRec, {
-            btitle: sections.pricing!.title,
-            bdescr: sections.pricing!.descr || '',
-            rec_anchor: 'pricing',
-            price_cur: '',
-            currency: '',
-            bg_color: theme.bgSecondary,
-            title_color: theme.textPrimary,
-            descr_color: theme.textSecondary,
-            color: theme.textPrimary,
-            li_title_color: theme.textPrimary,
-            li_descr_color: theme.textSecondary,
-            colormode,
-            theme: presetKey,
-            style_preset: presetKey,
-            list: sections.pricing!.plans.map((p, i) => ({
-              lid: String(i + 1),
-              ls: String(i + 1),
-              li_title: p.name,
-              li_price: p.price,
-              li_price_cur: '',
-              li_currency: '',
-              li_subtitle: p.period || '',
-              li_descr: Array.isArray(p.features)
-                ? `<ul>${p.features.map((f) => `<li>${f}</li>`).join('')}</ul>`
-                : String(p.features),
-              li_button: p.btn_text || 'Выбрать тариф',
-              li_btn_text: p.btn_text || 'Выбрать тариф',
-              li_btn_href: p.btn_href || '#form',
-              li_buttonlink: p.btn_href || '#form',
-              ...(p.is_featured ? { li_featured: 'y' } : {}),
-            })),
-          })
+          client.updateBlock(targetPageId, priceRec, pricePackage.fields)
         );
         sectionsGenerated.push('pricing');
       }
@@ -456,23 +378,11 @@ server.tool(
         sectionsGenerated.push('faq');
       }
 
-      // 8. Form (BF204 / BF204N - tplId 678) with #form anchor
-      const formRec = await client.addBlock(targetPageId, 'BF204');
+      // 8. Contact / Form (Template Vault: Contact Section via T123)
+      const formPackage = packageContactSection(sections.form);
+      const formRec = await client.addBlock(targetPageId, formPackage.tplId);
       updateTasks.push(() =>
-        client.updateBlock(targetPageId, formRec, {
-          btitle: sections.form.title,
-          bdescr: sections.form.descr,
-          buttontitle: sections.form.btn_text,
-          rec_anchor: 'form',
-          inputs: sections.form.inputs,
-          bg_color: presetKey === 'dji' ? '#000000' : (sections.faq ? theme.bgPrimary : theme.bgSecondary),
-          title_color: presetKey === 'dji' ? '#FFFFFF' : theme.textPrimary,
-          descr_color: presetKey === 'dji' ? '#94A3B8' : theme.textSecondary,
-          color: presetKey === 'dji' ? '#FFFFFF' : theme.textPrimary,
-          colormode: presetKey === 'dji' ? 'dark' : colormode,
-          theme: presetKey,
-          style_preset: presetKey,
-        })
+        client.updateBlock(targetPageId, formRec, formPackage.fields)
       );
       sectionsGenerated.push('form');
 

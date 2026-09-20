@@ -124,3 +124,103 @@ function escapeAttr(str: string): string {
 function escapeComment(str: string): string {
   return str.replace(/-->/g, '-- >');
 }
+
+import { MediaOrchestrator } from '../generators/media-orchestrator.js';
+import { TemplateEngine } from '../generators/template-engine.js';
+
+export const TAILWIND_HEADER_CDN = `<script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">`;
+
+export interface T123BlockPackage {
+  tplId: 'T123';
+  fields: {
+    code: string;
+    rawcod: string;
+  };
+}
+
+export type HeroBlockPackage = T123BlockPackage;
+
+/**
+ * Packages the Hero section into a custom Design Engine T123 block,
+ * resolving media via MediaOrchestrator and generating studio Tailwind HTML.
+ */
+export function packageHeroSection(
+  data: any,
+  niche = 'telecom',
+  includeCdn = true
+): T123BlockPackage {
+  const orchestrator = new MediaOrchestrator();
+  const backgroundUrl = data.backgroundUrl || data.bg_image_url || orchestrator.resolveHeroImage(niche);
+
+  let heroHtml = TemplateEngine.renderHero(data, backgroundUrl);
+  if (includeCdn) {
+    heroHtml = `${TAILWIND_HEADER_CDN}\n${heroHtml}`;
+  }
+
+  return {
+    tplId: 'T123',
+    fields: {
+      code: heroHtml,
+      rawcod: heroHtml,
+    },
+  };
+}
+
+/**
+ * Packages the Bento Features section into a custom studio T123 block.
+ */
+export function packageFeaturesSection(data: any): T123BlockPackage {
+  const html = TemplateEngine.renderBento(data);
+  return {
+    tplId: 'T123',
+    fields: {
+      code: html,
+      rawcod: html,
+    },
+  };
+}
+
+/**
+ * Packages the Metrics section into a custom studio T123 block.
+ */
+export function packageMetricsSection(data: any): T123BlockPackage {
+  const html = TemplateEngine.renderMetrics(data);
+  return {
+    tplId: 'T123',
+    fields: {
+      code: html,
+      rawcod: html,
+    },
+  };
+}
+
+/**
+ * Packages the Pricing section into a custom studio T123 block.
+ */
+export function packagePricingSection(data: any): T123BlockPackage {
+  const html = TemplateEngine.renderPricing(data);
+  return {
+    tplId: 'T123',
+    fields: {
+      code: html,
+      rawcod: html,
+    },
+  };
+}
+
+/**
+ * Packages the Contact / Form section into a custom studio T123 block.
+ */
+export function packageContactSection(data: any): T123BlockPackage {
+  const html = TemplateEngine.renderContact(data);
+  return {
+    tplId: 'T123',
+    fields: {
+      code: html,
+      rawcod: html,
+    },
+  };
+}
+
+
+
