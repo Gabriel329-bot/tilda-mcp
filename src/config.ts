@@ -12,6 +12,9 @@ export const STORAGE_DIR = path.resolve(ROOT_DIR, 'storage');
 export const SCREENSHOTS_DIR = path.resolve(STORAGE_DIR, 'screenshots');
 export const STORAGE_STATE_PATH = process.env.TILDA_STORAGE_STATE_PATH || path.resolve(STORAGE_DIR, 'storage_state.json');
 
+export const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '';
+export const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
+
 import fs from 'fs';
 
 const candidateBravePaths = [

@@ -127,7 +127,7 @@ function escapeComment(str: string): string {
 
 import { MediaOrchestrator } from './media-orchestrator.js';
 import { TemplateEngine } from './template-engine.js';
-import { ThemeTokens } from '../templates/theme-tokens.js';
+import { ThemeTokens, getThemeTokens } from '../templates/theme-tokens.js';
 import { SeoOrchestrator } from './seo-orchestrator.js';
 
 export const TAILWIND_HEADER_CDN = `<script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">`;
@@ -157,12 +157,14 @@ export function packageHeroSection(
 ): T123BlockPackage {
   const orchestrator = new MediaOrchestrator();
   const backgroundUrl = data.backgroundUrl || data.bg_image_url || orchestrator.resolveHeroImage(niche);
+  const resolvedTheme: ThemeTokens = typeof theme === 'string' ? getThemeTokens(theme) : theme || getThemeTokens('dji');
+  const fontUrl = resolvedTheme.fontImportUrl || 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap';
 
   let heroHtml = TemplateEngine.renderHero(data, backgroundUrl, theme);
 
   let prefix = '';
   if (includeCdn) {
-    prefix += `${TAILWIND_HEADER_CDN}\n`;
+    prefix += `<script src="https://cdn.tailwindcss.com"></script>\n<link href="${fontUrl}" rel="stylesheet">\n`;
   }
   if (backgroundUrl) {
     prefix += `<link rel="preload" as="image" href="${backgroundUrl}">\n`;

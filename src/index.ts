@@ -17,6 +17,7 @@ import {
   packageTimelineSection,
   packageCalculatorSection,
 } from './generators/block-packager.js';
+import { buildLocalPreview } from './generators/preview-builder.js';
 
 // Initialize MCP Server
 const server = new McpServer({
@@ -61,6 +62,194 @@ async function runInBatches<T>(tasks: (() => Promise<T>)[], batchSize = 3): Prom
   return results;
 }
 
+export const landingSectionsSchema = z.object({
+  header: z
+    .object({
+      logo_text: z.string().describe('Brand/logo text'),
+      menu_items: z
+        .array(
+          z.object({
+            title: z.string(),
+            href: z.string(),
+          })
+        )
+        .optional()
+        .describe('Navigation items'),
+      btn_text: z.string().optional().describe('CTA text'),
+      btn_href: z.string().optional().describe('CTA link'),
+    })
+    .optional(),
+  hero: z.object({
+    title: z.string(),
+    descr: z.string(),
+    badge: z.string().optional(),
+    btn_text: z.string().optional(),
+    btn_href: z.string().optional(),
+    btn2_text: z.string().optional(),
+    btn2_href: z.string().optional(),
+    btn1: z
+      .object({
+        text: z.string(),
+        href: z.string().optional(),
+      })
+      .optional(),
+    btn2: z
+      .object({
+        text: z.string(),
+        href: z.string().optional(),
+      })
+      .optional(),
+    bg_image_url: z.string().optional().describe('Cover background image URL'),
+    niche: z.string().optional().describe('Niche preset for background'),
+  }),
+  marquee: z
+    .object({
+      items: z.array(z.string()).optional(),
+    })
+    .optional(),
+  features: z.object({
+    title: z.string(),
+    descr: z.string().optional(),
+    items: z
+      .array(
+        z.object({
+          title: z.string(),
+          descr: z.string(),
+          img_url: z.string().optional(),
+        })
+      )
+      .max(4),
+  }),
+  timeline: z
+    .object({
+      title: z.string().describe('Timeline / Roadmap section title'),
+      descr: z.string().optional(),
+      steps: z.array(
+        z.object({
+          step: z.string().optional(),
+          step_num: z.string().optional(),
+          title: z.string(),
+          descr: z.string(),
+        })
+      ),
+    })
+    .optional(),
+  metrics: z.object({
+    title: z.string(),
+    descr: z.string().optional(),
+    items: z
+      .array(
+        z.object({
+          title: z.string().optional(),
+          descr: z.string(),
+          num: z.string().optional(),
+        })
+      )
+      .max(4),
+  }),
+  calculator: z
+    .object({
+      title: z.string().optional(),
+      descr: z.string().optional(),
+      unit_label: z.string().optional().describe('Unit label, e.g. "узлов", "пользователей", "лицензий"'),
+      base_price: z.number().optional().describe('Base price per unit, e.g. 5000'),
+      min: z.number().optional().describe('Minimum slider value'),
+      max: z.number().optional().describe('Maximum slider value'),
+      step: z.number().optional().describe('Slider step increment'),
+      default_value: z.number().optional().describe('Default slider value'),
+      input_label: z.string().optional().describe('Label above the slider'),
+      btn_text: z.string().optional().describe('CTA button text'),
+    })
+    .optional(),
+  pricing: z
+    .object({
+      title: z.string().describe('Pricing section title'),
+      descr: z.string().optional(),
+      plans: z.array(
+        z.object({
+          name: z.string(),
+          price: z.string(),
+          period: z.string().optional(),
+          features: z.array(z.string()),
+          btn_text: z.string().default('Выбрать тариф').optional(),
+          btn_href: z.string().default('#form').optional(),
+          is_featured: z.boolean().optional(),
+        })
+      ),
+    })
+    .optional(),
+  testimonials: z
+    .object({
+      title: z.string().describe('Testimonials section title'),
+      descr: z.string().optional(),
+      items: z.array(
+        z.object({
+          name: z.string(),
+          role: z.string().optional(),
+          text: z.string(),
+          rating: z.number().optional(),
+          avatar_url: z.string().optional(),
+        })
+      ),
+    })
+    .optional(),
+  faq: z
+    .object({
+      title: z.string().describe('FAQ section title'),
+      descr: z.string().optional(),
+      items: z.array(
+        z.object({
+          question: z.string().optional(),
+          answer: z.string().optional(),
+          title: z.string().optional(),
+          descr: z.string().optional(),
+        })
+      ),
+    })
+    .optional(),
+  form: z
+    .object({
+      title: z.string().optional(),
+      descr: z.string().optional(),
+      btn_text: z.string().optional(),
+      badge: z.string().optional(),
+      success_message: z.string().optional().describe('Custom text shown after successful form submission'),
+      webhook_url: z.string().optional().describe('Webhook endpoint URL for lead submissions'),
+      telegram_bot_token: z.string().optional().describe('Telegram bot token for lead delivery'),
+      telegram_chat_id: z.string().optional().describe('Telegram chat ID for lead delivery'),
+      inputs: z
+        .array(
+          z.object({
+            type: z.string().describe('Field type: email, text, phone, textarea'),
+            title: z.string(),
+            placeholder: z.string().optional(),
+            required: z.boolean().optional(),
+          })
+        )
+        .optional(),
+    })
+    .optional(),
+  cro: z
+    .object({
+      enable_sticky_bar: z.boolean().default(true).optional(),
+      enable_social_toast: z.boolean().default(false).optional(),
+      enable_cookie_banner: z.boolean().default(true).optional(),
+      stickyTitle: z.string().optional(),
+      stickySubtitle: z.string().optional(),
+      stickyBtn: z.string().optional(),
+      socialProofMsg: z.string().optional(),
+    })
+    .optional(),
+  footer: z
+    .object({
+      title: z.string().optional(),
+      descr: z.string().optional(),
+      text: z.string().optional(),
+    })
+    .optional(),
+  custom_css: z.string().optional(),
+});
+
 // =========================================================================
 // TOOL 1: tilda_fast_generate_landing (High-Level End-to-End Generator)
 // =========================================================================
@@ -79,183 +268,7 @@ server.tool(
       .describe('Color preset: dark, minimal, warm, dji, linear, apple, light'),
     safeMode: z.boolean().optional().default(true).describe('Human-like pacing delays'),
     custom_css: z.string().optional().describe('Custom CSS/HTML for T123 embed'),
-    sections: z.object({
-      header: z
-        .object({
-          logo_text: z.string().describe('Brand/logo text'),
-          menu_items: z
-            .array(
-              z.object({
-                title: z.string(),
-                href: z.string(),
-              })
-            )
-            .optional()
-            .describe('Navigation items'),
-          btn_text: z.string().optional().describe('CTA text'),
-          btn_href: z.string().optional().describe('CTA link'),
-        })
-        .optional(),
-      hero: z.object({
-        title: z.string(),
-        descr: z.string(),
-        badge: z.string().optional(),
-        btn_text: z.string().optional(),
-        btn_href: z.string().optional(),
-        btn2_text: z.string().optional(),
-        btn2_href: z.string().optional(),
-        btn1: z
-          .object({
-            text: z.string(),
-            href: z.string().optional(),
-          })
-          .optional(),
-        btn2: z
-          .object({
-            text: z.string(),
-            href: z.string().optional(),
-          })
-          .optional(),
-        bg_image_url: z.string().optional().describe('Cover background image URL'),
-        niche: z.string().optional().describe('Niche preset for background'),
-      }),
-      marquee: z
-        .object({
-          items: z.array(z.string()).optional(),
-        })
-        .optional(),
-      features: z.object({
-        title: z.string(),
-        descr: z.string().optional(),
-        items: z
-          .array(
-            z.object({
-              title: z.string(),
-              descr: z.string(),
-              img_url: z.string().optional(),
-            })
-          )
-          .max(4),
-      }),
-      timeline: z
-        .object({
-          title: z.string().describe('Timeline / Roadmap section title'),
-          descr: z.string().optional(),
-          steps: z.array(
-            z.object({
-              step: z.string().optional(),
-              step_num: z.string().optional(),
-              title: z.string(),
-              descr: z.string(),
-            })
-          ),
-        })
-        .optional(),
-      metrics: z.object({
-        title: z.string(),
-        descr: z.string().optional(),
-        items: z
-          .array(
-            z.object({
-              title: z.string().optional(),
-              descr: z.string(),
-              num: z.string().optional(),
-            })
-          )
-          .max(4),
-      }),
-      calculator: z
-        .object({
-          title: z.string().optional(),
-          descr: z.string().optional(),
-        })
-        .optional(),
-      pricing: z
-        .object({
-          title: z.string().describe('Pricing section title'),
-          descr: z.string().optional(),
-          plans: z.array(
-            z.object({
-              name: z.string(),
-              price: z.string(),
-              period: z.string().optional(),
-              features: z.array(z.string()),
-              btn_text: z.string().default('Выбрать тариф').optional(),
-              btn_href: z.string().default('#form').optional(),
-              is_featured: z.boolean().optional(),
-            })
-          ),
-        })
-        .optional(),
-      testimonials: z
-        .object({
-          title: z.string().describe('Testimonials section title'),
-          descr: z.string().optional(),
-          items: z.array(
-            z.object({
-              name: z.string(),
-              role: z.string().optional(),
-              text: z.string(),
-              rating: z.number().optional(),
-              avatar_url: z.string().optional(),
-            })
-          ),
-        })
-        .optional(),
-      faq: z
-        .object({
-          title: z.string().describe('FAQ section title'),
-          descr: z.string().optional(),
-          items: z.array(
-            z.object({
-              question: z.string().optional(),
-              answer: z.string().optional(),
-              title: z.string().optional(),
-              descr: z.string().optional(),
-            })
-          ),
-        })
-        .optional(),
-      form: z
-        .object({
-          title: z.string().optional(),
-          descr: z.string().optional(),
-          btn_text: z.string().optional(),
-          badge: z.string().optional(),
-          success_message: z.string().optional().describe('Custom text shown after successful form submission'),
-          webhook_url: z.string().optional().describe('Webhook endpoint URL for lead submissions'),
-          inputs: z
-            .array(
-              z.object({
-                type: z.string().describe('Field type: email, text, phone, textarea'),
-                title: z.string(),
-                placeholder: z.string().optional(),
-                required: z.boolean().optional(),
-              })
-            )
-            .optional(),
-        })
-        .optional(),
-      cro: z
-        .object({
-          enable_sticky_bar: z.boolean().default(true).optional(),
-          enable_social_toast: z.boolean().default(false).optional(),
-          enable_cookie_banner: z.boolean().default(true).optional(),
-          stickyTitle: z.string().optional(),
-          stickySubtitle: z.string().optional(),
-          stickyBtn: z.string().optional(),
-          socialProofMsg: z.string().optional(),
-        })
-        .optional(),
-      footer: z
-        .object({
-          title: z.string().optional(),
-          descr: z.string().optional(),
-          text: z.string().optional(),
-        })
-        .optional(),
-      custom_css: z.string().optional(),
-    }),
+    sections: landingSectionsSchema,
   },
   async ({ projectId, pageId, landingTitle, title, style_preset, safeMode, custom_css, sections }) => {
     try {
@@ -542,6 +555,68 @@ server.tool(
           {
             type: 'text',
             text: `Fast build error: ${err.message}`,
+          },
+        ],
+      };
+    }
+  }
+);
+
+// =========================================================================
+// TOOL 1b: tilda_preview_landing (Instant Local Standalone HTML Preview)
+// =========================================================================
+server.tool(
+  'tilda_preview_landing',
+  'Локальная компиляция лендинга в монолитный HTML-файл для мгновенного предпросмотра в браузере без обращения к Tilda API.',
+  {
+    landingTitle: z.string().optional().describe('Page title'),
+    title: z.string().optional().describe('Alias for landingTitle'),
+    style_preset: z
+      .enum(['dark', 'minimal', 'warm', 'dji', 'linear', 'apple', 'light'])
+      .default('minimal')
+      .optional()
+      .describe('Color preset: dark, minimal, warm, dji, linear, apple, light'),
+    custom_css: z.string().optional().describe('Custom CSS/HTML embed'),
+    outputPath: z.string().optional().describe('Custom path to save preview HTML file'),
+    sections: landingSectionsSchema,
+  },
+  async ({ landingTitle, title, style_preset, custom_css, outputPath, sections }) => {
+    try {
+      const result = buildLocalPreview({
+        landingTitle,
+        title,
+        style_preset,
+        custom_css,
+        outputPath,
+        sections,
+      });
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(
+              {
+                success: true,
+                preview_url: result.previewUrl,
+                file_path: result.filePath,
+                sections_count: result.sectionsCount,
+                preset: style_preset || 'minimal',
+                message: `Превью успешно скомпилировано! Откройте в браузере: ${result.previewUrl}`,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    } catch (err: any) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: `Preview generation error: ${err.message}`,
           },
         ],
       };

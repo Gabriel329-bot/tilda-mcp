@@ -12,6 +12,7 @@ export interface ThemeTokens {
   textPrimary: string;         // Основной заголовок (text-[#1D1D1F])
   textSecondary: string;       // Описание (text-[#86868B] или text-slate-500)
   fontFamily: string;
+  fontImportUrl: string;       // URL Google Fonts
   // Опциональные алиасы для обратной совместимости
   bgPageLight?: string;
   bgCardLight?: string;
@@ -37,6 +38,7 @@ export const THEMES: Record<string, ThemeTokens> = {
     textPrimary: 'text-slate-900',
     textSecondary: 'text-slate-600',
     fontFamily: "font-['Open_Sans',sans-serif]",
+    fontImportUrl: 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap',
   },
   // Неоновое темное агентство / Киберпанк
   dark: {
@@ -56,6 +58,7 @@ export const THEMES: Record<string, ThemeTokens> = {
     textPrimary: 'text-white',
     textSecondary: 'text-slate-400',
     fontFamily: "font-['Open_Sans',sans-serif]",
+    fontImportUrl: 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap',
   },
   // Минималистичный SaaS / Linear
   linear: {
@@ -74,7 +77,8 @@ export const THEMES: Record<string, ThemeTokens> = {
     borderLight: 'border-slate-200',
     textPrimary: 'text-slate-900',
     textSecondary: 'text-slate-500',
-    fontFamily: "font-['Open_Sans',sans-serif]",
+    fontFamily: "font-['Inter',sans-serif]",
+    fontImportUrl: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap',
   },
   // Премиальный технологичный Apple / Light
   apple: {
@@ -93,7 +97,8 @@ export const THEMES: Record<string, ThemeTokens> = {
     borderLight: 'border-black/[0.08]',
     textPrimary: 'text-[#1D1D1F]',
     textSecondary: 'text-slate-500',
-    fontFamily: "font-['-apple-system',BlinkMacSystemFont,'Segoe_UI',Roboto,sans-serif]",
+    fontFamily: "font-['Plus_Jakarta_Sans',sans-serif]",
+    fontImportUrl: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap',
   },
   // Светлый премиум-пресет Light
   light: {
@@ -112,7 +117,8 @@ export const THEMES: Record<string, ThemeTokens> = {
     borderLight: 'border-black/[0.08]',
     textPrimary: 'text-[#1D1D1F]',
     textSecondary: 'text-slate-500',
-    fontFamily: "font-['-apple-system',BlinkMacSystemFont,'Segoe_UI',Roboto,sans-serif]",
+    fontFamily: "font-['Plus_Jakarta_Sans',sans-serif]",
+    fontImportUrl: 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap',
   },
 };
 

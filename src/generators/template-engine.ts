@@ -1,6 +1,7 @@
 import { TEMPLATES } from '../templates/html-templates.js';
 import { getIcon, ICONS } from '../templates/icons.js';
 import { ThemeTokens, getThemeTokens } from '../templates/theme-tokens.js';
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } from '../config.js';
 
 export function applyTokens(html: string, theme: ThemeTokens): string {
   const bgPage = theme.bgPage || theme.bgPageLight || 'bg-white';
@@ -22,7 +23,8 @@ export function applyTokens(html: string, theme: ThemeTokens): string {
     .replace(/\{\{THEME_BORDER\}\}/g, border)
     .replace(/\{\{THEME_TEXT_PRIMARY\}\}/g, textPrimary)
     .replace(/\{\{THEME_TEXT_SECONDARY\}\}/g, textSecondary)
-    .replace(/\{\{THEME_FONT\}\}/g, theme.fontFamily);
+    .replace(/\{\{THEME_FONT\}\}/g, theme.fontFamily)
+    .replace(/\{\{THEME_FONT_URL\}\}/g, theme.fontImportUrl || 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap');
 }
 
 function resolveTheme(theme?: ThemeTokens | string, data?: any): ThemeTokens {
@@ -201,6 +203,9 @@ export class TemplateEngine {
       data.success_text ||
       'Наш специалист свяжется с вами в ближайшее время по указанному номеру телефона.';
 
+    const tgBotToken = data.telegram_bot_token || data.tg_bot_token || TELEGRAM_BOT_TOKEN || '';
+    const tgChatId = data.telegram_chat_id || data.tg_chat_id || TELEGRAM_CHAT_ID || '';
+
     const html = template
       .replace('{{BADGE}}', badge)
       .replace('{{TITLE}}', data.title || 'Связаться с нами')
@@ -208,6 +213,8 @@ export class TemplateEngine {
       .replace('{{CONTACTS_LIST}}', contactsHtml)
       .replace('{{BTN_TEXT}}', data.btn_text || 'Отправить заявку')
       .replace('{{WEBHOOK_URL}}', webhookUrl || data.webhook_url || '')
+      .replace('{{TG_BOT_TOKEN}}', tgBotToken)
+      .replace('{{TG_CHAT_ID}}', tgChatId)
       .replace('{{FORM_SUCCESS_TEXT}}', formSuccessText);
 
     return applyTokens(html, activeTheme);
@@ -281,9 +288,28 @@ export class TemplateEngine {
 
   static renderCalculator(data?: any, theme?: ThemeTokens | string): string {
     const activeTheme = resolveTheme(theme, data);
+    const unitLabel = data?.unit_label || data?.unitLabel || 'ед.';
+    const basePrice = Number(data?.base_price || data?.basePrice || 5000);
+    const min = Number(data?.min !== undefined ? data.min : 1);
+    const max = Number(data?.max !== undefined ? data.max : 50);
+    const step = Number(data?.step !== undefined ? data.step : 1);
+    const defaultVal = Number(data?.default_value ?? data?.defaultValue ?? data?.value ?? Math.min(Math.max(5, min), max));
+    const initialTotal = (defaultVal * basePrice).toLocaleString('ru-RU');
+    const inputLabel = data?.input_label || data?.inputLabel || 'Количество рабочих мест / серверов';
+    const btnText = data?.btn_text || data?.btnText || 'Зафиксировать цену';
+
     const html = TEMPLATES.calculatorSection
       .replace('{{TITLE}}', data?.title || 'Калькулятор стоимости инфраструктуры')
-      .replace('{{DESCR}}', data?.descr || 'Рассчитайте предварительный бюджет под ваши объемы');
+      .replace('{{DESCR}}', data?.descr || 'Рассчитайте предварительный бюджет под ваши объемы')
+      .replace(/\{\{CALC_INPUT_LABEL\}\}/g, inputLabel)
+      .replace(/\{\{CALC_UNIT_LABEL\}\}/g, unitLabel)
+      .replace(/\{\{CALC_BASE_PRICE\}\}/g, String(basePrice))
+      .replace(/\{\{CALC_MIN\}\}/g, String(min))
+      .replace(/\{\{CALC_MAX\}\}/g, String(max))
+      .replace(/\{\{CALC_STEP\}\}/g, String(step))
+      .replace(/\{\{CALC_DEFAULT\}\}/g, String(defaultVal))
+      .replace('{{CALC_INITIAL_TOTAL}}', initialTotal)
+      .replace('{{CALC_BTN_TEXT}}', btnText);
 
     return applyTokens(html, activeTheme);
   }

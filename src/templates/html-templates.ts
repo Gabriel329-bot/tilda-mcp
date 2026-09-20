@@ -307,18 +307,50 @@ async function handleLeadSubmit(event) {
   btn.disabled = true;
 
   try {
+    var formData = new FormData(form);
+    formData.delete('_hp_company');
+    var payload = Object.fromEntries(formData.entries());
+
     var webhook = '{{WEBHOOK_URL}}';
+    var tgBotToken = '{{TG_BOT_TOKEN}}';
+    var tgChatId = '{{TG_CHAT_ID}}';
+
     if (webhook && webhook !== '{{WEBHOOK_URL}}' && webhook.startsWith('http')) {
-      var formData = new FormData(form);
-      formData.delete('_hp_company');
-      var payload = Object.fromEntries(formData.entries());
       await fetch(webhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+    } else if (tgBotToken && tgBotToken !== '{{TG_BOT_TOKEN}}' && tgChatId && tgChatId !== '{{TG_CHAT_ID}}') {
+      var name = payload.name || 'Не указано';
+      var phone = payload.phone || 'Не указан';
+      var email = payload.email || 'Не указан';
+      var text = '🔥 <b>Новая заявка с сайта:</b>\\n\\n' +
+        '👤 <b>Имя:</b> ' + name + '\\n' +
+        '📞 <b>Телефон:</b> ' + phone + '\\n' +
+        '✉️ <b>Email:</b> ' + email;
+      await fetch('https://api.telegram.org/bot' + tgBotToken + '/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: tgChatId,
+          text: text,
+          parse_mode: 'HTML'
+        })
+      });
     } else {
-      await new Promise(function(r) { setTimeout(r, 800); });
+      // Offline fallback buffer in localStorage
+      try {
+        if (typeof localStorage !== 'undefined') {
+          var leads = JSON.parse(localStorage.getItem('tilda_offline_leads') || '[]');
+          payload._saved_at = new Date().toISOString();
+          leads.push(payload);
+          localStorage.setItem('tilda_offline_leads', JSON.stringify(leads));
+        }
+      } catch (storageErr) {
+        console.warn('LocalStorage leads buffer error:', storageErr);
+      }
+      await new Promise(function(r) { setTimeout(r, 600); });
     }
 
     var container = document.getElementById('lead-form-container');
@@ -467,18 +499,50 @@ async function handleLeadSubmit(event) {
   btn.disabled = true;
 
   try {
+    var formData = new FormData(form);
+    formData.delete('_hp_company');
+    var payload = Object.fromEntries(formData.entries());
+
     var webhook = '{{WEBHOOK_URL}}';
+    var tgBotToken = '{{TG_BOT_TOKEN}}';
+    var tgChatId = '{{TG_CHAT_ID}}';
+
     if (webhook && webhook !== '{{WEBHOOK_URL}}' && webhook.startsWith('http')) {
-      var formData = new FormData(form);
-      formData.delete('_hp_company');
-      var payload = Object.fromEntries(formData.entries());
       await fetch(webhook, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+    } else if (tgBotToken && tgBotToken !== '{{TG_BOT_TOKEN}}' && tgChatId && tgChatId !== '{{TG_CHAT_ID}}') {
+      var name = payload.name || 'Не указано';
+      var phone = payload.phone || 'Не указан';
+      var email = payload.email || 'Не указан';
+      var text = '🔥 <b>Новая заявка с сайта:</b>\\n\\n' +
+        '👤 <b>Имя:</b> ' + name + '\\n' +
+        '📞 <b>Телефон:</b> ' + phone + '\\n' +
+        '✉️ <b>Email:</b> ' + email;
+      await fetch('https://api.telegram.org/bot' + tgBotToken + '/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: tgChatId,
+          text: text,
+          parse_mode: 'HTML'
+        })
+      });
     } else {
-      await new Promise(function(r) { setTimeout(r, 800); });
+      // Offline fallback buffer in localStorage
+      try {
+        if (typeof localStorage !== 'undefined') {
+          var leads = JSON.parse(localStorage.getItem('tilda_offline_leads') || '[]');
+          payload._saved_at = new Date().toISOString();
+          leads.push(payload);
+          localStorage.setItem('tilda_offline_leads', JSON.stringify(leads));
+        }
+      } catch (storageErr) {
+        console.warn('LocalStorage leads buffer error:', storageErr);
+      }
+      await new Promise(function(r) { setTimeout(r, 600); });
     }
 
     var container = document.getElementById('lead-form-container');
@@ -626,19 +690,19 @@ async function handleLeadSubmit(event) {
       <div class="space-y-6 mb-8">
         <div>
           <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-medium text-slate-700">Количество рабочих мест / серверов:</span>
-            <span id="calc-val-display" class="text-lg font-bold text-[{{THEME_ACCENT}}]">5 узлов</span>
+            <span class="text-sm font-medium text-slate-700">{{CALC_INPUT_LABEL}}:</span>
+            <span id="calc-val-display" class="text-lg font-bold text-[{{THEME_ACCENT}}]">{{CALC_DEFAULT}} {{CALC_UNIT_LABEL}}</span>
           </div>
-          <input id="calc-slider" type="range" min="1" max="50" value="5" class="w-full accent-[{{THEME_ACCENT}}] cursor-pointer" oninput="updateCalculator(this.value)" />
+          <input id="calc-slider" type="range" min="{{CALC_MIN}}" max="{{CALC_MAX}}" step="{{CALC_STEP}}" value="{{CALC_DEFAULT}}" class="w-full accent-[{{THEME_ACCENT}}] cursor-pointer" oninput="updateCalculator(this.value)" />
         </div>
       </div>
       <div class="pt-6 border-t {{THEME_BORDER}} flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <div class="text-xs text-slate-500">Ориентировочная стоимость:</div>
-          <div id="calc-total" class="text-3xl sm:text-4xl font-extrabold text-slate-950">25 000 ₽ <span class="text-sm font-normal text-slate-500">/ мес</span></div>
+          <div id="calc-total" class="text-3xl sm:text-4xl font-extrabold text-slate-950">{{CALC_INITIAL_TOTAL}} ₽ <span class="text-sm font-normal text-slate-500">/ мес</span></div>
         </div>
         <a href="#form" class="h-12 px-8 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all shadow-md cursor-pointer">
-          Зафиксировать цену
+          {{CALC_BTN_TEXT}}
         </a>
       </div>
     </div>
@@ -646,8 +710,8 @@ async function handleLeadSubmit(event) {
   <script>
     function updateCalculator(val) {
       var disp = document.getElementById('calc-val-display');
-      if (disp) disp.innerText = val + ' узлов';
-      var base = 5000;
+      if (disp) disp.innerText = val + ' {{CALC_UNIT_LABEL}}';
+      var base = {{CALC_BASE_PRICE}};
       var total = Number(val) * base;
       var totalElem = document.getElementById('calc-total');
       if (totalElem) totalElem.innerHTML = total.toLocaleString('ru-RU') + ' ₽ <span class="text-sm font-normal text-slate-500">/ мес</span>';

@@ -598,6 +598,105 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     expect(heroCroDisabled.fields.code).not.toContain('id="social-proof-toast"');
     expect(heroCroDisabled.fields.code).not.toContain('id="cookie-consent-banner"');
   });
+
+  it('Scenario 14: Phase 2 Core Advanced & DX (Local Preview, Calculator Customization, Telegram Backup)', async () => {
+    const fs = await import('fs');
+    const { buildLocalPreview } = await import('../src/generators/preview-builder.js');
+    const { packageCalculatorSection, packageContactSection } = await import(
+      '../src/generators/block-packager.js'
+    );
+    const { getThemeTokens } = await import('../src/templates/theme-tokens.js');
+
+    // 1. Local preview generator (Dry Run)
+    const previewResult = buildLocalPreview({
+      landingTitle: 'Dry Run Preview Test',
+      style_preset: 'apple',
+      sections: {
+        header: {
+          logo_text: 'PreviewTech',
+          menu_items: [{ title: 'Фичи', href: '#features' }],
+        },
+        hero: {
+          title: 'Мгновенное локальное превью',
+          descr: 'Сборка без обращения к Tilda API',
+        },
+        calculator: {
+          title: 'Калькулятор лицензий',
+          unit_label: 'лицензий',
+          base_price: 15000,
+          min: 1,
+          max: 20,
+          default_value: 4,
+        },
+        form: {
+          title: 'Заявка на пилот',
+          telegram_bot_token: 'TEST_TOKEN_123',
+          telegram_chat_id: 'TEST_CHAT_456',
+        },
+        footer: {
+          title: 'PreviewTech Inc.',
+        },
+      },
+    });
+
+    expect(fs.existsSync(previewResult.filePath)).toBe(true);
+    expect(previewResult.previewUrl).toMatch(/^file:\/\/\//);
+    expect(previewResult.html).toContain('<!DOCTYPE html>');
+    expect(previewResult.html).toContain('Plus+Jakarta+Sans');
+    expect(previewResult.html).toContain('PreviewTech');
+    expect(previewResult.html).toContain('Мгновенное локальное превью');
+    expect(previewResult.html).toContain('Калькулятор лицензий');
+    expect(previewResult.sectionsCount).toBeGreaterThanOrEqual(4);
+
+    // 2. Calculator Parameterization
+    const calcPkg = packageCalculatorSection(
+      {
+        title: 'Конфигуратор тарифа',
+        descr: 'Выберите объем ресурсов',
+        unit_label: 'виртуальных машин',
+        base_price: 8500,
+        min: 2,
+        max: 64,
+        step: 2,
+        default_value: 10,
+      },
+      'linear'
+    );
+    expect(calcPkg.fields.code).toContain('8500');
+    expect(calcPkg.fields.code).toContain('виртуальных машин');
+    expect(calcPkg.fields.code).toContain('min="2"');
+    expect(calcPkg.fields.code).toContain('max="64"');
+    expect(calcPkg.fields.code).toContain('step="2"');
+    expect(calcPkg.fields.code).toContain('value="10"');
+    // 10 * 8500 = 85 000 ₽
+    expect(calcPkg.fields.code).toContain((85000).toLocaleString('ru-RU') + ' ₽');
+
+    // 3. Telegram Lead Delivery & LocalStorage fallback
+    const contactTg = packageContactSection(
+      {
+        title: 'Связаться с нами',
+        telegram_bot_token: 'BOT_TOKEN_XYZ',
+        telegram_chat_id: 'CHAT_ID_789',
+      },
+      undefined,
+      'dark'
+    );
+    expect(contactTg.fields.code).toContain('var tgBotToken = \'BOT_TOKEN_XYZ\';');
+    expect(contactTg.fields.code).toContain('var tgChatId = \'CHAT_ID_789\';');
+    expect(contactTg.fields.code).toContain('https://api.telegram.org/bot\' + tgBotToken + \'/sendMessage');
+    expect(contactTg.fields.code).toContain('Новая заявка с сайта');
+    expect(contactTg.fields.code).toContain('tilda_offline_leads');
+
+    // Offline buffer when neither webhook nor TG token is provided
+    const contactOffline = packageContactSection({ title: 'Тестовая форма' }, undefined, 'apple');
+    expect(contactOffline.fields.code).toContain('localStorage.setItem(\'tilda_offline_leads\'');
+
+    // 4. Font Pairs in Theme Tokens
+    expect(getThemeTokens('linear').fontImportUrl).toContain('Inter');
+    expect(getThemeTokens('linear').fontImportUrl).toContain('JetBrains+Mono');
+    expect(getThemeTokens('apple').fontImportUrl).toContain('Plus+Jakarta+Sans');
+    expect(getThemeTokens('dark').fontImportUrl).toContain('Open+Sans');
+  });
 });
 
 
