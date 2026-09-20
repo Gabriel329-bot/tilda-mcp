@@ -129,6 +129,7 @@ import { MediaOrchestrator } from './media-orchestrator.js';
 import { TemplateEngine } from './template-engine.js';
 import { ThemeTokens, getThemeTokens } from '../templates/theme-tokens.js';
 import { SeoOrchestrator } from './seo-orchestrator.js';
+import { AnalyticsOptions, AnalyticsOrchestrator } from './analytics-orchestrator.js';
 
 export const TAILWIND_HEADER_CDN = `<script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">`;
 
@@ -145,7 +146,7 @@ export type HeroBlockPackage = T123BlockPackage;
 /**
  * Packages the Hero section into a custom Design Engine T123 block,
  * resolving media via MediaOrchestrator and generating studio Tailwind HTML
- * with critical image preload, Schema.org JSON-LD and global CRO overlays.
+ * with critical image preload, Schema.org JSON-LD, Analytics tracking, and global CRO overlays.
  */
 export function packageHeroSection(
   data: any,
@@ -153,7 +154,8 @@ export function packageHeroSection(
   includeCdn = true,
   theme?: string | ThemeTokens,
   seoData?: any,
-  croOptions?: any
+  croOptions?: any,
+  analytics?: AnalyticsOptions
 ): T123BlockPackage {
   const orchestrator = new MediaOrchestrator();
   const backgroundUrl = data.backgroundUrl || data.bg_image_url || orchestrator.resolveHeroImage(niche);
@@ -163,6 +165,9 @@ export function packageHeroSection(
   let heroHtml = TemplateEngine.renderHero(data, backgroundUrl, theme);
 
   let prefix = '';
+  if (analytics) {
+    prefix += `${AnalyticsOrchestrator.generateAnalyticsSnippet(analytics)}\n`;
+  }
   if (includeCdn) {
     prefix += `<script src="https://cdn.tailwindcss.com"></script>\n<link href="${fontUrl}" rel="stylesheet">\n`;
   }

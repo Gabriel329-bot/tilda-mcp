@@ -2,12 +2,12 @@
 
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-blue.svg)](https://modelcontextprotocol.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
-[![Vitest](https://img.shields.io/badge/Vitest-13%2F13%20Passed-brightgreen.svg)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Vitest-16%2F16%20Passed-brightgreen.svg)](https://vitest.dev/)
 [![License](https://img.shields.io/badge/License-BSL%201.1-amber.svg)](LICENSE)
 
 **Tilda MCP Server** — промышленный сервер по протоколу **Model Context Protocol (MCP)** для автономной генерации, дизайн-оркестрации и точечного редактирования коммерческих лендингов на платформе **Tilda Publishing**.
 
-Движок избавляет LLM от генерации разрозненного HTML «из головы» и опирается на архитектуру **Template Vault**: проверенные студийные шаблоны на базе Tailwind CSS, динамические дизайн-токены, векторные SVG-иконки, интерактивные микро-JS компоненты (калькулятор, переключатель периодов цен, аккордеон), CRO-оверлеи и встроенную микроразметку Schema.org JSON-LD.
+Движок избавляет LLM от генерации разрозненного HTML «из головы» и опирается на архитектуру **Template Vault**: проверенные студийные шаблоны на базе Tailwind CSS, динамические дизайн-токены, векторные SVG-иконки, интерактивные микро-JS компоненты (калькулятор, переключатель периодов цен, аккордеон), CRO-оверлеи, сквозную аналитику (Яндекс.Метрика + GA4) и встроенную микроразметку Schema.org JSON-LD.
 
 ---
 
@@ -22,6 +22,7 @@
                 ┌──────────────────────────────────────────────┐
                 │             Tilda MCP Server                 │
                 │  - tilda_fast_generate_landing (One-Shot)    │
+                │  - tilda_preview_landing (Local Dry Run)     │
                 │  - tilda_update_page_section (Surgical <3s)  │
                 └──────────────┬────────────────┬──────────────┘
                                │                │
@@ -33,8 +34,8 @@
             │  - Interactive Calc │          │  - Rollback Shield  │
             │  - CRO & Sticky CTA │          │  - Fast Batching    │
             │  - Schema.org SEO   │          └──────────┬──────────┘
-            └─────────────────────┘                     │
-                                                        ▼
+            │  - YM & GA4 Tracking│                     │
+            └─────────────────────┘                     ▼
                                              ┌─────────────────────┐
                                              │  Tilda Publishing   │
                                              │  (Published Page)   │
@@ -76,6 +77,28 @@
   * `FAQPage`: все вопросы и ответы аккордеона для отображения в расширенных сниппетах Google/Яндекс.
   * `Product` & `Offer`: тарифные планы с валютой (RUB) и ценами.
 * **OpenGraph & Twitter Card**: метатеги заголовка, превью-изображения и описания для соцсетей и мессенджеров.
+
+---
+
+### 3b. Сквозная аналитика & Автотрекинг целей (Яндекс.Метрика + GA4)
+
+Модуль `AnalyticsOrchestrator` автоматически генерирует официальные счетчики и диспетчер `trackEvent(name, params)`:
+* **Яндекс.Метрика (`ym_id`)**: официальный код счетчика с включенными `webvisor`, `clickmap`, `trackLinks`, `accurateTrackBounce`.
+* **Google Analytics 4 (`ga_id`)**: официальная инициализация `gtag.js` и сборка событий.
+* **Универсальный микро-диспетчер `trackEvent`**: единая точка входа для событий, отправляющая данные параллельно в `ym('reachGoal')`, `gtag('event')` и `dataLayer.push`.
+* **Встроенные коммерческие цели**:
+  * `lead_submit`: успешная отправка лид-формы (`{ form: 'main_contact' }`).
+  * `calc_interact`: взаимодействие со слайдером калькулятора (`{ value: number }`) с 500ms debounce.
+  * `billing_toggle`: переключение периода цен в тарифах (`{ period: 'annual' | 'monthly' }`).
+  * `cta_click`: клики по конверсионным кнопкам (`hero_primary`, `pricing_plan`, `calc_primary`, `sticky_mobile_cta`).
+
+---
+
+### 3c. Надежная доставка лидов (Telegram + Webhook + Offline Buffer)
+
+* **Telegram Bot Delivery**: мгновенная отправка заявок с формы прямо в рабочий Telegram-чат (`telegram_bot_token` + `telegram_chat_id`) с HTML-форматированием.
+* **Webhook Endpoint**: интеграция с CRM (amoCRM, Bitrix24) через кастомный `webhook_url`.
+* **LocalStorage Offline Buffer**: в случае недоступности сети или отсутствия API-ключей заявка надежно сохраняется в локальном буфере браузера (`tilda_offline_leads`).
 
 ---
 
@@ -214,7 +237,13 @@ tilda-mcp/
 }
 ```
 
-### 2. `tilda_update_page_section`
+### 2. `tilda_preview_landing`
+Мгновенная локальная компиляция лендинга в монолитный HTML-файл для браузерного предпросмотра (**Dry Run**, 0 обращений к Tilda API, экономия квот):
+* Собирает все секции, Tailwind CDN, шрифт Google Fonts, микро-JS, Schema.org и счетчики аналитики.
+* Сохраняет файл в `preview/landing-preview.html` и возвращает готовую кликабельную ссылку `file:///...`.
+* Принимает ту же конфигурацию, что и `tilda_fast_generate_landing`.
+
+### 3. `tilda_update_page_section`
 Хирургическое обновление конкретной секции без пересборки всей страницы (**~2.5–3 сек**):
 * Обновление цен в тарифах (`pricing`).
 * Изменение вопросов в `faq`.
@@ -288,7 +317,7 @@ TILDA_PROJECT_ID="40607103"
 
 ## 🧪 Тестирование
 
-Набор тестов проверяет надежность HTTP-движка, механизмы ретраев, отката, генерацию компонентов Template Vault, переключатели тарифов и Schema.org:
+Набор тестов проверяет надежность HTTP-движка, механизмы ретраев, отката, генерацию компонентов Template Vault, переключатели тарифов, Schema.org и сквозную аналитику:
 
 ```bash
 npm test
@@ -296,7 +325,7 @@ npm test
 
 Результат:
 ```
- ✓ tests/resilience.test.ts (13 tests)
+ ✓ tests/resilience.test.ts (16 tests)
    - Scenario 1: Retry Success (429 Too Many Requests -> 200 OK)
    - Scenario 2: Retry Exhaustion (3x 502 -> Throws Error)
    - Scenario 2b: Retry Exhaustion on Network Error (ECONNRESET)
@@ -310,9 +339,12 @@ npm test
    - Scenario 10: Custom Studio Footer Section (T123)
    - Scenario 11: Light Preset & Studio Components (Apple Style)
    - Scenario 12: Commercial Upgrade (Marquee, Timeline, Calculator, Billing Toggle, Schema.org, CRO)
+   - Scenario 13: Phase 1 Stabilization (Dehardcoded Success Text, Phone Validation, Honeypot, CRO flags)
+   - Scenario 14: Phase 2 Core Advanced & DX (Local Preview, Calculator Customization, Telegram Backup)
+   - Scenario 15: Phase 3 End-to-End Analytics & Goal Tracking (Yandex.Metrika + GA4 + Universal Dispatcher)
 
  Test Files  1 passed (1)
-      Tests  13 passed (13)
+      Tests  16 passed (16)
 ```
 
 ---

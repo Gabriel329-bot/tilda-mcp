@@ -697,6 +697,97 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     expect(getThemeTokens('apple').fontImportUrl).toContain('Plus+Jakarta+Sans');
     expect(getThemeTokens('dark').fontImportUrl).toContain('Open+Sans');
   });
+
+  it('Scenario 15: Phase 3 End-to-End Analytics & Goal Tracking (Yandex.Metrika + GA4 + Universal Dispatcher)', async () => {
+    const { AnalyticsOrchestrator } = await import('../src/generators/analytics-orchestrator.js');
+    const {
+      packageHeroSection,
+      packageContactSection,
+      packageCalculatorSection,
+      packagePricingSection,
+    } = await import('../src/generators/block-packager.js');
+    const { buildLocalPreview } = await import('../src/generators/preview-builder.js');
+
+    // 1. AnalyticsOrchestrator snippet generation
+    const fullSnippet = AnalyticsOrchestrator.generateAnalyticsSnippet({
+      ym_id: '12345678',
+      ga_id: 'G-XXXXXXXXXX',
+    });
+    expect(fullSnippet).toContain('https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX');
+    expect(fullSnippet).toContain("gtag('config', 'G-XXXXXXXXXX')");
+    expect(fullSnippet).toContain('https://mc.yandex.ru/metrika/tag.js');
+    expect(fullSnippet).toContain('ym(12345678, "init", {');
+    expect(fullSnippet).toContain('webvisor:true');
+    expect(fullSnippet).toContain('clickmap:true');
+    expect(fullSnippet).toContain('trackLinks:true');
+    expect(fullSnippet).toContain("window.YM_ID = '12345678';");
+    expect(fullSnippet).toContain('function trackEvent(name, params)');
+    expect(fullSnippet).toContain("window.ym(numId, 'reachGoal', name, params)");
+    expect(fullSnippet).toContain("window.gtag('event', name, params)");
+
+    // Safe fallback when no IDs provided
+    const noopSnippet = AnalyticsOrchestrator.generateAnalyticsSnippet();
+    expect(noopSnippet).toContain('function trackEvent(name, params)');
+    expect(noopSnippet).not.toContain('googletagmanager');
+    expect(noopSnippet).not.toContain('mc.yandex.ru');
+
+    // 2. Goal tracking in packageContactSection (lead_submit)
+    const darkContact = packageContactSection({ title: 'Контакты' }, undefined, 'dark');
+    expect(darkContact.fields.code).toContain("trackEvent('lead_submit', { form: 'main_contact' })");
+
+    const lightContact = packageContactSection({ title: 'Контакты' }, undefined, 'light');
+    expect(lightContact.fields.code).toContain("trackEvent('lead_submit', { form: 'main_contact' })");
+
+    // 3. Goal tracking in packageCalculatorSection (calc_interact debounced & calc_primary cta)
+    const calcPkg = packageCalculatorSection({ title: 'Калькулятор' }, 'minimal');
+    expect(calcPkg.fields.code).toContain("trackEvent('calc_interact', { value: Number(val) })");
+    expect(calcPkg.fields.code).toContain("trackEvent('cta_click',{button:'calc_primary'})");
+    expect(calcPkg.fields.code).toContain('calcDebounceTimer');
+
+    // 4. Goal tracking in packagePricingSection (billing_toggle & pricing_plan cta)
+    const pricingPkg = packagePricingSection(
+      {
+        title: 'Тарифы',
+        plans: [{ name: 'Базовый', price: '1000 ₽', btn_text: 'Выбрать' }],
+      },
+      'minimal'
+    );
+    expect(pricingPkg.fields.code).toContain("trackEvent('billing_toggle', { period: isYear ? 'annual' : 'monthly' })");
+    expect(pricingPkg.fields.code).toContain("trackEvent('cta_click',{button:'pricing_plan'})");
+
+    // 5. Hero & CRO CTA tracking and analytics integration in packageHeroSection
+    const heroWithAnalytics = packageHeroSection(
+      { title: 'Заголовок Hero' },
+      'telecom',
+      true,
+      'apple',
+      undefined,
+      { enable_sticky_bar: true },
+      { ym_id: '99887766', ga_id: 'G-HERO99' }
+    );
+    expect(heroWithAnalytics.fields.code).toContain("trackEvent('cta_click',{button:'hero_primary'})");
+    expect(heroWithAnalytics.fields.code).toContain("trackEvent('cta_click',{button:'sticky_mobile_cta'})");
+    expect(heroWithAnalytics.fields.code).toContain('G-HERO99');
+    expect(heroWithAnalytics.fields.code).toContain('99887766');
+
+    // 6. Preview integration with analytics in <head>
+    const preview = buildLocalPreview({
+      landingTitle: 'Analytics Preview Test',
+      analytics: {
+        ym_id: '12345678',
+        ga_id: 'G-PREVIEW42',
+      },
+      sections: {
+        hero: { title: 'Превью с аналитикой' },
+        form: { title: 'Связаться' },
+      },
+    });
+    expect(preview.html).toContain('G-PREVIEW42');
+    expect(preview.html).toContain('12345678');
+    expect(preview.html).toContain('function trackEvent');
+    expect(preview.html).toContain('<!-- Google Analytics 4 (gtag.js) -->');
+    expect(preview.html).toContain('<!-- Yandex.Metrika counter -->');
+  });
 });
 
 

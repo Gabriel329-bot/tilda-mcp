@@ -20,7 +20,7 @@ export const TEMPLATES = {
     </p>
     
     <div class="flex flex-wrap items-center justify-center gap-4">
-      <a href="{{BTN1_HREF}}" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-lg cursor-pointer">
+      <a href="{{BTN1_HREF}}" onclick="if(typeof trackEvent==='function')trackEvent('cta_click',{button:'hero_primary'});" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-lg cursor-pointer">
         {{BTN1_TEXT}}
       </a>
       <a href="{{BTN2_HREF}}" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-white/5 hover:bg-white/10 border border-white/15 text-white font-medium text-sm transition-all duration-200 backdrop-blur-sm cursor-pointer">
@@ -49,7 +49,7 @@ export const TEMPLATES = {
     </p>
     
     <div class="flex flex-wrap items-center justify-center gap-4">
-      <a href="{{BTN1_HREF}}" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer">
+      <a href="{{BTN1_HREF}}" onclick="if(typeof trackEvent==='function')trackEvent('cta_click',{button:'hero_primary'});" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer">
         {{BTN1_TEXT}}
       </a>
       <a href="{{BTN2_HREF}}" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-white hover:bg-slate-50 text-slate-900 border border-black/[0.1] shadow-sm font-medium text-sm transition-all duration-200 cursor-pointer">
@@ -166,6 +166,9 @@ export const TEMPLATES = {
     periodElements.forEach(function(el) {
       el.textContent = isYear ? '/ год (-20%)' : '/ месяц';
     });
+    if (typeof trackEvent === 'function') {
+      trackEvent('billing_toggle', { period: isYear ? 'annual' : 'monthly' });
+    }
   }
   </script>
 </section>
@@ -186,7 +189,7 @@ export const TEMPLATES = {
       {{FEATURES_LIST}}
     </ul>
   </div>
-  <a href="#form" class="w-full inline-flex items-center justify-center h-12 {{THEME_RADIUS_BTN}} {{BTN_STYLE}} font-medium text-sm transition-all duration-200 cursor-pointer">
+  <a href="#form" onclick="if(typeof trackEvent==='function')trackEvent('cta_click',{button:'pricing_plan'});" class="w-full inline-flex items-center justify-center h-12 {{THEME_RADIUS_BTN}} {{BTN_STYLE}} font-medium text-sm transition-all duration-200 cursor-pointer">
     {{BTN_TEXT}}
   </a>
 </div>
@@ -351,6 +354,10 @@ async function handleLeadSubmit(event) {
         console.warn('LocalStorage leads buffer error:', storageErr);
       }
       await new Promise(function(r) { setTimeout(r, 600); });
+    }
+
+    if (typeof trackEvent === 'function') {
+      trackEvent('lead_submit', { form: 'main_contact' });
     }
 
     var container = document.getElementById('lead-form-container');
@@ -545,6 +552,10 @@ async function handleLeadSubmit(event) {
       await new Promise(function(r) { setTimeout(r, 600); });
     }
 
+    if (typeof trackEvent === 'function') {
+      trackEvent('lead_submit', { form: 'main_contact' });
+    }
+
     var container = document.getElementById('lead-form-container');
     if (container) {
       container.innerHTML = \`
@@ -701,13 +712,14 @@ async function handleLeadSubmit(event) {
           <div class="text-xs text-slate-500">Ориентировочная стоимость:</div>
           <div id="calc-total" class="text-3xl sm:text-4xl font-extrabold text-slate-950">{{CALC_INITIAL_TOTAL}} ₽ <span class="text-sm font-normal text-slate-500">/ мес</span></div>
         </div>
-        <a href="#form" class="h-12 px-8 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all shadow-md cursor-pointer">
+        <a href="#form" onclick="if(typeof trackEvent==='function')trackEvent('cta_click',{button:'calc_primary'});" class="h-12 px-8 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all shadow-md cursor-pointer">
           {{CALC_BTN_TEXT}}
         </a>
       </div>
     </div>
   </div>
   <script>
+    var calcDebounceTimer = null;
     function updateCalculator(val) {
       var disp = document.getElementById('calc-val-display');
       if (disp) disp.innerText = val + ' {{CALC_UNIT_LABEL}}';
@@ -715,6 +727,13 @@ async function handleLeadSubmit(event) {
       var total = Number(val) * base;
       var totalElem = document.getElementById('calc-total');
       if (totalElem) totalElem.innerHTML = total.toLocaleString('ru-RU') + ' ₽ <span class="text-sm font-normal text-slate-500">/ мес</span>';
+
+      clearTimeout(calcDebounceTimer);
+      calcDebounceTimer = setTimeout(function() {
+        if (typeof trackEvent === 'function') {
+          trackEvent('calc_interact', { value: Number(val) });
+        }
+      }, 500);
     }
   </script>
 </section>
@@ -729,7 +748,7 @@ async function handleLeadSubmit(event) {
     <span class="text-xs font-semibold text-slate-900 leading-tight">{{STICKY_CTA_TITLE}}</span>
     <span class="text-[10px] text-slate-500">{{STICKY_CTA_SUBTITLE}}</span>
   </div>
-  <a href="#form" class="h-9 px-5 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-xs shadow-md whitespace-nowrap">
+  <a href="#form" onclick="if(typeof trackEvent==='function')trackEvent('cta_click',{button:'sticky_mobile_cta'});" class="h-9 px-5 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-xs shadow-md whitespace-nowrap">
     {{STICKY_CTA_BTN}}
   </a>
 </div>

@@ -247,8 +247,23 @@ export const landingSectionsSchema = z.object({
       text: z.string().optional(),
     })
     .optional(),
+  analytics: z
+    .object({
+      ym_id: z.string().optional().describe('Yandex.Metrika counter ID (e.g. "12345678")'),
+      ga_id: z.string().optional().describe('Google Analytics 4 Measurement ID (e.g. "G-XXXXXXXXXX")'),
+    })
+    .optional()
+    .describe('Analytics configuration for Yandex.Metrika and GA4'),
   custom_css: z.string().optional(),
 });
+
+const analyticsSchema = z
+  .object({
+    ym_id: z.string().optional().describe('Yandex.Metrika counter ID (e.g. "12345678")'),
+    ga_id: z.string().optional().describe('Google Analytics 4 Measurement ID (e.g. "G-XXXXXXXXXX")'),
+  })
+  .optional()
+  .describe('Analytics configuration for Yandex.Metrika and GA4');
 
 // =========================================================================
 // TOOL 1: tilda_fast_generate_landing (High-Level End-to-End Generator)
@@ -268,9 +283,10 @@ server.tool(
       .describe('Color preset: dark, minimal, warm, dji, linear, apple, light'),
     safeMode: z.boolean().optional().default(true).describe('Human-like pacing delays'),
     custom_css: z.string().optional().describe('Custom CSS/HTML for T123 embed'),
+    analytics: analyticsSchema,
     sections: landingSectionsSchema,
   },
-  async ({ projectId, pageId, landingTitle, title, style_preset, safeMode, custom_css, sections }) => {
+  async ({ projectId, pageId, landingTitle, title, style_preset, safeMode, custom_css, analytics, sections }) => {
     try {
       const startTime = performance.now();
       const client = new TildaHttpClient({ humanLikePacing: safeMode });
@@ -342,6 +358,7 @@ server.tool(
       }
 
       // 2. Hero Section (Template Vault: HD Cover + Tailwind CSS via T123 with SEO & CRO)
+      const effectiveAnalytics = analytics || (sections as any).analytics;
       const heroPackage = packageHeroSection(
         sections.hero,
         sections.hero.niche || 'telecom',
@@ -353,7 +370,8 @@ server.tool(
           faq: sections.faq,
           pricing: sections.pricing,
         },
-        sections.cro
+        sections.cro,
+        effectiveAnalytics
       );
       const heroRec = await client.addBlock(targetPageId, heroPackage.tplId);
       updateTasks.push(() =>
@@ -578,10 +596,12 @@ server.tool(
       .describe('Color preset: dark, minimal, warm, dji, linear, apple, light'),
     custom_css: z.string().optional().describe('Custom CSS/HTML embed'),
     outputPath: z.string().optional().describe('Custom path to save preview HTML file'),
+    analytics: analyticsSchema,
     sections: landingSectionsSchema,
   },
-  async ({ landingTitle, title, style_preset, custom_css, outputPath, sections }) => {
+  async ({ landingTitle, title, style_preset, custom_css, outputPath, analytics, sections }) => {
     try {
+      const effectiveAnalytics = analytics || (sections as any).analytics;
       const result = buildLocalPreview({
         landingTitle,
         title,
@@ -589,6 +609,7 @@ server.tool(
         custom_css,
         outputPath,
         sections,
+        analytics: effectiveAnalytics,
       });
 
       return {

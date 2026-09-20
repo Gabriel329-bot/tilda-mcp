@@ -7,6 +7,7 @@ import { MediaOrchestrator } from './media-orchestrator.js';
 import { SeoOrchestrator } from './seo-orchestrator.js';
 import { ThemeTokens, getThemeTokens } from '../templates/theme-tokens.js';
 import { getPresetCss, StylePresetName } from '../styles/presets.js';
+import { AnalyticsOptions, AnalyticsOrchestrator } from './analytics-orchestrator.js';
 
 export interface PreviewLandingOptions {
   landingTitle?: string;
@@ -14,6 +15,7 @@ export interface PreviewLandingOptions {
   style_preset?: StylePresetName | string;
   custom_css?: string;
   outputPath?: string;
+  analytics?: AnalyticsOptions;
   sections: {
     header?: {
       logo_text: string;
@@ -243,6 +245,9 @@ export function buildLocalPreview(options: PreviewLandingOptions): PreviewBuildR
   // 14. CRO Overlays
   sectionsHtml.push(TemplateEngine.renderCroOverlays(sections.cro, theme));
 
+  // Analytics Snippet (Yandex.Metrika + GA4 + Dispatcher)
+  const analyticsSnippet = AnalyticsOrchestrator.generateAnalyticsSnippet(options.analytics);
+
   // Custom CSS compilation
   const effectiveCss = [presetCss || '', options.custom_css || '', sections.custom_css || '']
     .filter(Boolean)
@@ -256,6 +261,7 @@ export function buildLocalPreview(options: PreviewLandingOptions): PreviewBuildR
   <title>${effectiveTitle}</title>
   ${seoMeta}
   ${seoJsonLd}
+  ${analyticsSnippet}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="${theme.fontImportUrl}" rel="stylesheet">

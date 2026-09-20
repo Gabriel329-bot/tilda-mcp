@@ -344,7 +344,7 @@ export class TemplateEngine {
     <span class="text-xs font-semibold text-slate-900 leading-tight">${stickyTitle}</span>
     <span class="text-[10px] text-slate-500">${stickySubtitle}</span>
   </div>
-  <a href="#form" class="h-9 px-5 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-xs shadow-md whitespace-nowrap">
+  <a href="#form" onclick="if(typeof trackEvent==='function')trackEvent('cta_click',{button:'sticky_mobile_cta'});" class="h-9 px-5 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-xs shadow-md whitespace-nowrap">
     ${stickyBtn}
   </a>
 </div>`);
