@@ -1,13 +1,13 @@
 export const TEMPLATES = {
-  // 1. HERO BLOCK (Гарантированно белый текст, HD-фон ЦОД, оверлей 80%, pill-кнопка)
+  // 1. HERO BLOCK (Гарантированно белый текст, HD-фон ЦОД, оверлей 80%, кнопка с темой)
   hero: `
-<div class="relative w-full min-h-[90vh] flex items-center justify-center bg-black overflow-hidden font-['Open_Sans',sans-serif]">
+<div class="relative w-full min-h-[90vh] flex items-center justify-center bg-black overflow-hidden {{THEME_FONT}}">
   <img src="{{BG_IMAGE}}" alt="Background" class="absolute inset-0 w-full h-full object-cover opacity-35 filter brightness-90" />
   <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black"></div>
   
   <div class="relative z-10 max-w-5xl mx-auto px-6 py-24 text-center flex flex-col items-center">
-    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[#0070D5] text-xs font-semibold tracking-wider uppercase mb-8">
-      <span class="w-2 h-2 rounded-full bg-[#0070D5] animate-pulse"></span>
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[{{THEME_ACCENT}}] text-xs font-semibold tracking-wider uppercase mb-8">
+      <span class="w-2 h-2 rounded-full bg-[{{THEME_ACCENT}}] animate-pulse"></span>
       {{BADGE}}
     </div>
     
@@ -20,10 +20,10 @@ export const TEMPLATES = {
     </p>
     
     <div class="flex flex-wrap items-center justify-center gap-4">
-      <a href="{{BTN1_HREF}}" class="inline-flex items-center justify-center px-8 h-12 rounded-[1408px] bg-[#0070D5] hover:bg-blue-600 text-white font-medium text-sm transition-all duration-200 shadow-lg shadow-blue-500/25 cursor-pointer">
+      <a href="{{BTN1_HREF}}" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-lg cursor-pointer">
         {{BTN1_TEXT}}
       </a>
-      <a href="{{BTN2_HREF}}" class="inline-flex items-center justify-center px-8 h-12 rounded-[1408px] bg-white/5 hover:bg-white/10 border border-white/15 text-white font-medium text-sm transition-all duration-200 backdrop-blur-sm cursor-pointer">
+      <a href="{{BTN2_HREF}}" class="inline-flex items-center justify-center px-8 h-12 {{THEME_RADIUS_BTN}} bg-white/5 hover:bg-white/10 border border-white/15 text-white font-medium text-sm transition-all duration-200 backdrop-blur-sm cursor-pointer">
         {{BTN2_TEXT}}
       </a>
     </div>
@@ -31,9 +31,9 @@ export const TEMPLATES = {
 </div>
 `,
 
-  // 2. BENTO FEATURES GRID (Белый контейнер, мягкие подложки #F8FAFC, 4px углы, SVG иконки, hover-эффект)
+  // 2. BENTO FEATURES GRID (Подложка страницы, мягкие подложки карточек, настраиваемый радиус, SVG иконки, hover-эффект)
   bentoContainer: `
-<section id="features" class="w-full py-24 bg-white font-['Open_Sans',sans-serif]">
+<section id="features" class="w-full py-24 {{THEME_BG_PAGE}} {{THEME_FONT}}">
   <div class="max-w-7xl mx-auto px-6">
     <div class="text-center max-w-3xl mx-auto mb-16">
       <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-4">{{SECTION_TITLE}}</h2>
@@ -47,15 +47,15 @@ export const TEMPLATES = {
 `,
 
   bentoCard: `
-<div class="group relative flex flex-col justify-between p-7 rounded-[4px] bg-[#F8FAFC] border border-slate-200/80 hover:border-[#0070D5]/50 transition-all duration-200">
+<div class="group relative flex flex-col justify-between p-7 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} hover:border-[{{THEME_ACCENT}}]/50 transition-all duration-200">
   <div>
-    <div class="w-12 h-12 rounded-[4px] bg-white border border-slate-200 flex items-center justify-center text-[#0070D5] mb-6 group-hover:scale-105 transition-transform duration-200 shadow-sm">
+    <div class="w-12 h-12 {{THEME_RADIUS_CARD}} bg-white border border-slate-200 flex items-center justify-center text-[{{THEME_ACCENT}}] mb-6 group-hover:scale-105 transition-transform duration-200 shadow-sm">
       {{ICON_SVG}}
     </div>
     <h3 class="text-lg font-semibold text-slate-900 mb-2 leading-snug">{{TITLE}}</h3>
     <p class="text-sm text-slate-600 leading-relaxed">{{DESCR}}</p>
   </div>
-  <div class="mt-6 pt-4 border-t border-slate-200/60 flex items-center text-xs font-semibold text-[#0070D5] group-hover:translate-x-1 transition-transform">
+  <div class="mt-6 pt-4 border-t border-slate-200/60 flex items-center text-xs font-semibold text-[{{THEME_ACCENT}}] group-hover:translate-x-1 transition-transform">
     Подробнее <span class="ml-1">&rarr;</span>
   </div>
 </div>
@@ -63,7 +63,7 @@ export const TEMPLATES = {
 
   // 3. METRICS SECTION (Монохромные черные цифры, никаких синих заголовков)
   metricsContainer: `
-<section id="metrics" class="w-full py-20 bg-slate-50 border-y border-slate-200/60 font-['Open_Sans',sans-serif]">
+<section id="metrics" class="w-full py-20 bg-slate-50 border-y {{THEME_BORDER}} {{THEME_FONT}}">
   <div class="max-w-7xl mx-auto px-6">
     <div class="text-center max-w-2xl mx-auto mb-12">
       <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">{{SECTION_TITLE}}</h2>
@@ -77,15 +77,15 @@ export const TEMPLATES = {
 `,
 
   metricItem: `
-<div class="p-6 rounded-[4px] bg-white border border-slate-200/80 text-center shadow-sm">
+<div class="p-6 {{THEME_RADIUS_CARD}} bg-white border {{THEME_BORDER}} text-center shadow-sm">
   <div class="text-4xl sm:text-5xl font-extrabold text-slate-950 tracking-tight mb-2">{{VALUE}}</div>
   <div class="text-xs sm:text-sm font-medium text-slate-500 leading-snug">{{LABEL}}</div>
 </div>
 `,
 
-  // 4. PRICING MONOLITH (Чистые цены, иконки галочек, Pill-кнопки)
+  // 4. PRICING MONOLITH (Чистые цены, иконки галочек, динамические кнопки)
   pricingContainer: `
-<section id="pricing" class="w-full py-24 bg-white font-['Open_Sans',sans-serif]">
+<section id="pricing" class="w-full py-24 {{THEME_BG_PAGE}} {{THEME_FONT}}">
   <div class="max-w-5xl mx-auto px-6">
     <div class="text-center max-w-2xl mx-auto mb-16">
       <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-4">{{SECTION_TITLE}}</h2>
@@ -99,7 +99,7 @@ export const TEMPLATES = {
 `,
 
   pricingCard: `
-<div class="flex flex-col justify-between p-8 sm:p-10 rounded-[4px] bg-[#F8FAFC] border {{BORDER_CLASS}}">
+<div class="flex flex-col justify-between p-8 sm:p-10 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{BORDER_CLASS}}">
   <div>
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-xl font-bold text-slate-900">{{PLAN_NAME}}</h3>
@@ -113,7 +113,7 @@ export const TEMPLATES = {
       {{FEATURES_LIST}}
     </ul>
   </div>
-  <a href="#form" class="w-full inline-flex items-center justify-center h-12 rounded-[1408px] {{BTN_STYLE}} font-medium text-sm transition-all duration-200 cursor-pointer">
+  <a href="#form" class="w-full inline-flex items-center justify-center h-12 {{THEME_RADIUS_BTN}} {{BTN_STYLE}} font-medium text-sm transition-all duration-200 cursor-pointer">
     {{BTN_TEXT}}
   </a>
 </div>
@@ -123,10 +123,10 @@ export const TEMPLATES = {
   contactSection: `
 <style>html { scroll-behavior: smooth; }</style>
 <script src="https://unpkg.com/imask" onload="initLeadPhoneMask()"></script>
-<section id="form" class="w-full py-24 bg-black text-white font-['Open_Sans',sans-serif] border-t border-white/10">
+<section id="form" class="w-full py-24 bg-black text-white {{THEME_FONT}} border-t border-white/10">
   <div class="max-w-5xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
     <div>
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-[#0070D5] text-xs font-semibold uppercase tracking-wider mb-6">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-[{{THEME_ACCENT}}] text-xs font-semibold uppercase tracking-wider mb-6">
         Приемная комиссия
       </div>
       <h2 class="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-white">
@@ -137,35 +137,35 @@ export const TEMPLATES = {
       </p>
       <div class="space-y-4 text-sm text-slate-300">
         <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[#0070D5]">📍</span>
+          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[{{THEME_ACCENT}}]">📍</span>
           <span>г. Москва, ул. Большая Спасская, д. 15</span>
         </div>
         <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[#0070D5]">📞</span>
+          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[{{THEME_ACCENT}}]">📞</span>
           <span>+7 (495) 123-45-67</span>
         </div>
         <div class="flex items-center gap-3">
-          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[#0070D5]">✉️</span>
+          <span class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-[{{THEME_ACCENT}}]">✉️</span>
           <span>priem@kc54.ru</span>
         </div>
       </div>
     </div>
 
-    <div id="lead-form-container" class="p-8 rounded-[4px] bg-[#111111] border border-white/10">
+    <div id="lead-form-container" class="p-8 {{THEME_RADIUS_CARD}} bg-[#111111] border border-white/10">
       <form id="lead-form" onsubmit="handleLeadSubmit(event)" class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Ваше имя</label>
-          <input type="text" name="name" required placeholder="Константин" class="w-full h-11 px-4 rounded-[4px] bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[#0070D5] transition-colors" />
+          <input type="text" name="name" required placeholder="Константин" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Номер телефона</label>
-          <input type="tel" id="lead-phone" name="phone" required placeholder="+7 (___) ___-__-__" class="w-full h-11 px-4 rounded-[4px] bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[#0070D5] transition-colors" />
+          <input type="tel" id="lead-phone" name="phone" required placeholder="+7 (___) ___-__-__" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1.5">Email для обратной связи</label>
-          <input type="email" name="email" required placeholder="name@domain.com" class="w-full h-11 px-4 rounded-[4px] bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[#0070D5] transition-colors" />
+          <input type="email" name="email" required placeholder="name@domain.com" class="w-full h-11 px-4 {{THEME_RADIUS_CARD}} bg-[#1A1A1A] border border-white/10 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-[{{THEME_ACCENT}}] transition-colors" />
         </div>
-        <button type="submit" class="w-full h-12 mt-2 rounded-[1408px] bg-[#0070D5] hover:bg-blue-600 text-white font-medium text-sm transition-all duration-200 shadow-lg shadow-blue-500/25 cursor-pointer">
+        <button type="submit" class="w-full h-12 mt-2 {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all duration-200 shadow-lg cursor-pointer">
           {{BTN_TEXT}}
         </button>
         <p class="text-[11px] text-slate-500 text-center mt-3">
@@ -221,7 +221,7 @@ async function handleLeadSubmit(event) {
           <p class="text-sm text-slate-400 max-w-sm mb-8 leading-relaxed">
             Менеджер приемной комиссии свяжется с вами в ближайшее время по указанному номеру телефона.
           </p>
-          <button type="button" onclick="location.reload()" class="inline-flex items-center justify-center px-6 h-11 rounded-[1408px] bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition-all duration-200 border border-white/10 cursor-pointer">
+          <button type="button" onclick="location.reload()" class="inline-flex items-center justify-center px-6 h-11 {{THEME_RADIUS_BTN}} bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition-all duration-200 border border-white/10 cursor-pointer">
             Отправить еще одну
           </button>
         </div>
@@ -239,7 +239,7 @@ async function handleLeadSubmit(event) {
 
   // 6. FAQ ACCORDION (Интерактивный нативный аккордеон с SVG-стрелками и плавной анимацией)
   faqContainer: `
-<section id="faq" class="w-full py-20 bg-white font-['Open_Sans',sans-serif] border-t border-slate-200/60">
+<section id="faq" class="w-full py-20 {{THEME_BG_PAGE}} {{THEME_FONT}} border-t {{THEME_BORDER}}">
   <div class="max-w-4xl mx-auto px-6">
     <div class="text-center max-w-2xl mx-auto mb-12">
       <h2 class="text-3xl font-bold text-slate-900 tracking-tight mb-3">{{SECTION_TITLE}}</h2>
@@ -253,10 +253,10 @@ async function handleLeadSubmit(event) {
 `,
 
   faqItem: `
-<details class="group mb-4 rounded-[4px] bg-[#F8FAFC] border border-slate-200/80 p-5 transition-all">
+<details class="group mb-4 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} p-5 transition-all">
   <summary class="flex justify-between items-center font-semibold text-slate-900 cursor-pointer list-none select-none">
     <span class="text-base text-slate-900 pr-4">{{QUESTION}}</span>
-    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[#0070D5] transition-transform duration-200 group-open:rotate-180">
+    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[{{THEME_ACCENT}}] transition-transform duration-200 group-open:rotate-180">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
     </span>
   </summary>

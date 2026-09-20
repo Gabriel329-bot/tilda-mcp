@@ -68,7 +68,11 @@ server.tool(
     pageId: z.string().optional().describe('Target page ID (created if omitted)'),
     landingTitle: z.string().optional().describe('Page title'),
     title: z.string().optional().describe('Alias for landingTitle'),
-    style_preset: z.enum(['dark', 'minimal', 'warm', 'dji']).default('minimal').optional().describe('Color preset: dark, minimal, warm, dji'),
+    style_preset: z
+      .enum(['dark', 'minimal', 'warm', 'dji', 'linear', 'apple'])
+      .default('minimal')
+      .optional()
+      .describe('Color preset: dark, minimal, warm, dji, linear, apple'),
     safeMode: z.boolean().optional().default(true).describe('Human-like pacing delays'),
     custom_css: z.string().optional().describe('Custom CSS/HTML for T123 embed'),
     sections: z.object({
@@ -280,7 +284,8 @@ server.tool(
       const heroPackage = packageHeroSection(
         sections.hero,
         sections.hero.niche || 'telecom',
-        true
+        true,
+        presetKey
       );
       const heroRec = await client.addBlock(targetPageId, heroPackage.tplId);
       updateTasks.push(() =>
@@ -289,7 +294,7 @@ server.tool(
       sectionsGenerated.push('hero');
 
       // 3. Features (Template Vault: Bento Features Grid via T123)
-      const featPackage = packageFeaturesSection(sections.features);
+      const featPackage = packageFeaturesSection(sections.features, presetKey);
       const featRec = await client.addBlock(targetPageId, featPackage.tplId);
       updateTasks.push(() =>
         client.updateBlock(targetPageId, featRec, featPackage.fields)
@@ -297,7 +302,7 @@ server.tool(
       sectionsGenerated.push('features');
 
       // 4. Metrics (Template Vault: Monochromatic Metrics via T123)
-      const metrPackage = packageMetricsSection(sections.metrics);
+      const metrPackage = packageMetricsSection(sections.metrics, presetKey);
       const metrRec = await client.addBlock(targetPageId, metrPackage.tplId);
       updateTasks.push(() =>
         client.updateBlock(targetPageId, metrRec, metrPackage.fields)
@@ -306,7 +311,7 @@ server.tool(
 
       // 5. Optional Pricing (Template Vault: Pricing Monolith via T123)
       if (sections.pricing) {
-        const pricePackage = packagePricingSection(sections.pricing);
+        const pricePackage = packagePricingSection(sections.pricing, presetKey);
         const priceRec = await client.addBlock(targetPageId, pricePackage.tplId);
         updateTasks.push(() =>
           client.updateBlock(targetPageId, priceRec, pricePackage.fields)
@@ -353,7 +358,7 @@ server.tool(
 
       // 7. Optional FAQ Accordion (Template Vault: Interactive Accordion via T123)
       if (sections.faq) {
-        const faqPackage = packageFaqSection(sections.faq);
+        const faqPackage = packageFaqSection(sections.faq, presetKey);
         const faqRec = await client.addBlock(targetPageId, faqPackage.tplId);
         updateTasks.push(() =>
           client.updateBlock(targetPageId, faqRec, faqPackage.fields)
@@ -362,7 +367,11 @@ server.tool(
       }
 
       // 8. Contact / Form (Template Vault: Contact Section via T123)
-      const formPackage = packageContactSection(sections.form);
+      const formPackage = packageContactSection(
+        sections.form,
+        (sections.form as any).webhook_url,
+        presetKey
+      );
       const formRec = await client.addBlock(targetPageId, formPackage.tplId);
       updateTasks.push(() =>
         client.updateBlock(targetPageId, formRec, formPackage.fields)
@@ -480,7 +489,7 @@ server.tool(
       ])
       .describe('Section name to update'),
     recordId: z.string().optional().describe('Direct record ID (auto-resolved if omitted)'),
-    style_preset: z.enum(['dark', 'minimal', 'warm', 'dji']).optional().describe('Style preset override'),
+    style_preset: z.enum(['dark', 'minimal', 'warm', 'dji', 'linear', 'apple']).optional().describe('Style preset override'),
     content: z.record(z.any()).describe('Fields to update in the section'),
     publish: z.boolean().optional().default(true).describe('Republish page after update'),
   },

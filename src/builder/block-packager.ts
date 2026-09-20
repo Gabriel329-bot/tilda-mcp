@@ -127,6 +127,7 @@ function escapeComment(str: string): string {
 
 import { MediaOrchestrator } from '../generators/media-orchestrator.js';
 import { TemplateEngine } from '../generators/template-engine.js';
+import { ThemeTokens } from '../templates/theme-tokens.js';
 
 export const TAILWIND_HEADER_CDN = `<script src="https://cdn.tailwindcss.com"></script><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">`;
 
@@ -147,12 +148,13 @@ export type HeroBlockPackage = T123BlockPackage;
 export function packageHeroSection(
   data: any,
   niche = 'telecom',
-  includeCdn = true
+  includeCdn = true,
+  theme?: string | ThemeTokens
 ): T123BlockPackage {
   const orchestrator = new MediaOrchestrator();
   const backgroundUrl = data.backgroundUrl || data.bg_image_url || orchestrator.resolveHeroImage(niche);
 
-  let heroHtml = TemplateEngine.renderHero(data, backgroundUrl);
+  let heroHtml = TemplateEngine.renderHero(data, backgroundUrl, theme);
   if (includeCdn) {
     heroHtml = `${TAILWIND_HEADER_CDN}\n${heroHtml}`;
   }
@@ -169,8 +171,8 @@ export function packageHeroSection(
 /**
  * Packages the Bento Features section into a custom studio T123 block.
  */
-export function packageFeaturesSection(data: any): T123BlockPackage {
-  const html = TemplateEngine.renderBento(data);
+export function packageFeaturesSection(data: any, theme?: string | ThemeTokens): T123BlockPackage {
+  const html = TemplateEngine.renderBento(data, theme);
   return {
     tplId: 'T123',
     fields: {
@@ -183,8 +185,8 @@ export function packageFeaturesSection(data: any): T123BlockPackage {
 /**
  * Packages the Metrics section into a custom studio T123 block.
  */
-export function packageMetricsSection(data: any): T123BlockPackage {
-  const html = TemplateEngine.renderMetrics(data);
+export function packageMetricsSection(data: any, theme?: string | ThemeTokens): T123BlockPackage {
+  const html = TemplateEngine.renderMetrics(data, theme);
   return {
     tplId: 'T123',
     fields: {
@@ -197,8 +199,8 @@ export function packageMetricsSection(data: any): T123BlockPackage {
 /**
  * Packages the Pricing section into a custom studio T123 block.
  */
-export function packagePricingSection(data: any): T123BlockPackage {
-  const html = TemplateEngine.renderPricing(data);
+export function packagePricingSection(data: any, theme?: string | ThemeTokens): T123BlockPackage {
+  const html = TemplateEngine.renderPricing(data, theme);
   return {
     tplId: 'T123',
     fields: {
@@ -211,8 +213,12 @@ export function packagePricingSection(data: any): T123BlockPackage {
 /**
  * Packages the Contact / Form section into a custom studio T123 block.
  */
-export function packageContactSection(data: any, webhookUrl?: string): T123BlockPackage {
-  const html = TemplateEngine.renderContact(data, webhookUrl);
+export function packageContactSection(
+  data: any,
+  webhookUrl?: string,
+  theme?: string | ThemeTokens
+): T123BlockPackage {
+  const html = TemplateEngine.renderContact(data, webhookUrl, theme);
   return {
     tplId: 'T123',
     fields: {
@@ -225,8 +231,8 @@ export function packageContactSection(data: any, webhookUrl?: string): T123Block
 /**
  * Packages the FAQ Accordion section into a custom studio T123 block.
  */
-export function packageFaqSection(data: any): T123BlockPackage {
-  const html = TemplateEngine.renderFAQ(data);
+export function packageFaqSection(data: any, theme?: string | ThemeTokens): T123BlockPackage {
+  const html = TemplateEngine.renderFAQ(data, theme);
   return {
     tplId: 'T123',
     fields: {
