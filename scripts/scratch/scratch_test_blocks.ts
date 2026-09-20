@@ -1,4 +1,4 @@
-import { TildaHttpClient } from './src/driver/tilda-http-client.js';
+import { TildaHttpClient } from '../../src/client/tilda-http-client.js';
 
 async function testBlocks() {
   const client = new TildaHttpClient({ humanLikePacing: false });

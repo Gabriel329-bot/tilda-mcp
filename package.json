@@ -13,7 +13,6 @@
     "dev": "tsx src/index.ts",
     "login": "tsx src/auth/login-helper.ts",
     "set-cookie": "tsx src/auth/save-cookie.ts",
-    "test:builder": "tsx test-builder.ts",
     "test": "vitest run"
   },
   "keywords": [

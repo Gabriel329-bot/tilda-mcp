@@ -1,5 +1,5 @@
-import { TildaHttpClient } from './src/driver/tilda-http-client.js';
-import { STYLE_PRESETS } from './src/styles/presets.js';
+import { TildaHttpClient } from '../../src/client/tilda-http-client.js';
+import { STYLE_PRESETS } from '../../src/styles/presets.js';
 
 async function testFullBTier() {
   console.log('[Test B-Tier] Initializing client...');
