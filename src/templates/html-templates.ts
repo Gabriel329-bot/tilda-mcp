@@ -65,8 +65,8 @@ export const TEMPLATES = {
 <section id="features" class="w-full py-24 {{THEME_BG_PAGE}} {{THEME_FONT}}">
   <div class="max-w-7xl mx-auto px-6">
     <div class="text-center max-w-3xl mx-auto mb-16">
-      <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-4">{{SECTION_TITLE}}</h2>
-      <p class="text-base sm:text-lg text-slate-500">{{SECTION_DESCR}}</p>
+      <h2 class="text-3xl sm:text-4xl font-bold {{THEME_TEXT_PRIMARY}} tracking-tight mb-4">{{SECTION_TITLE}}</h2>
+      <p class="text-base sm:text-lg {{THEME_TEXT_SECONDARY}}">{{SECTION_DESCR}}</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {{CARDS}}
@@ -76,15 +76,15 @@ export const TEMPLATES = {
 `,
 
   bentoCard: `
-<div class="group relative flex flex-col justify-between p-7 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} hover:border-[{{THEME_ACCENT}}]/50 transition-all duration-200">
+<div class="group relative flex flex-col justify-between p-7 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} hover:border-[{{THEME_ACCENT}}]/50 transition-all duration-200 shadow-sm">
   <div>
-    <div class="w-12 h-12 {{THEME_RADIUS_CARD}} bg-white border border-slate-200 flex items-center justify-center text-[{{THEME_ACCENT}}] mb-6 group-hover:scale-105 transition-transform duration-200 shadow-sm">
+    <div class="w-12 h-12 {{THEME_RADIUS_CARD}} bg-[{{THEME_ACCENT}}]/10 border border-[{{THEME_ACCENT}}]/20 flex items-center justify-center text-[{{THEME_ACCENT}}] mb-6 group-hover:scale-105 transition-transform duration-200 shadow-sm">
       {{ICON_SVG}}
     </div>
-    <h3 class="text-lg font-semibold text-slate-900 mb-2 leading-snug">{{TITLE}}</h3>
-    <p class="text-sm text-slate-600 leading-relaxed">{{DESCR}}</p>
+    <h3 class="text-lg font-semibold {{THEME_TEXT_PRIMARY}} mb-2 leading-snug">{{TITLE}}</h3>
+    <p class="text-sm {{THEME_TEXT_SECONDARY}} leading-relaxed">{{DESCR}}</p>
   </div>
-  <div class="mt-6 pt-4 border-t border-slate-200/60 flex items-center text-xs font-semibold text-[{{THEME_ACCENT}}] group-hover:translate-x-1 transition-transform">
+  <div class="mt-6 pt-4 border-t {{THEME_BORDER}} flex items-center text-xs font-semibold text-[{{THEME_ACCENT}}] group-hover:translate-x-1 transition-transform">
     Подробнее <span class="ml-1">&rarr;</span>
   </div>
 </div>
@@ -95,8 +95,8 @@ export const TEMPLATES = {
 <section id="metrics" class="w-full py-20 {{THEME_BG_PAGE}} border-y {{THEME_BORDER}} {{THEME_FONT}}">
   <div class="max-w-7xl mx-auto px-6">
     <div class="text-center max-w-2xl mx-auto mb-12">
-      <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight mb-2">{{SECTION_TITLE}}</h2>
-      <p class="text-sm sm:text-base text-slate-500">{{SECTION_DESCR}}</p>
+      <h2 class="text-2xl sm:text-3xl font-bold {{THEME_TEXT_PRIMARY}} tracking-tight mb-2">{{SECTION_TITLE}}</h2>
+      <p class="text-sm sm:text-base {{THEME_TEXT_SECONDARY}}">{{SECTION_DESCR}}</p>
     </div>
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
       {{ITEMS}}
@@ -107,8 +107,8 @@ export const TEMPLATES = {
 
   metricItem: `
 <div class="p-6 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} text-center shadow-sm">
-  <div class="text-4xl sm:text-5xl font-extrabold text-slate-950 tracking-tight mb-2">{{VALUE}}</div>
-  <div class="text-xs sm:text-sm font-medium text-slate-500 leading-snug">{{LABEL}}</div>
+  <div class="text-4xl sm:text-5xl font-extrabold {{THEME_TEXT_PRIMARY}} tracking-tight mb-2">{{VALUE}}</div>
+  <div class="text-xs sm:text-sm font-medium {{THEME_TEXT_SECONDARY}} leading-snug">{{LABEL}}</div>
 </div>
 `,
 
@@ -117,17 +117,17 @@ export const TEMPLATES = {
 <section id="pricing" class="w-full py-24 {{THEME_BG_PAGE}} {{THEME_FONT}}">
   <div class="max-w-5xl mx-auto px-6">
     <div class="text-center max-w-2xl mx-auto mb-12">
-      <h2 class="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-4">{{SECTION_TITLE}}</h2>
-      <p class="text-base text-slate-500">{{SECTION_DESCR}}</p>
+      <h2 class="text-3xl sm:text-4xl font-bold {{THEME_TEXT_PRIMARY}} tracking-tight mb-4">{{SECTION_TITLE}}</h2>
+      <p class="text-base {{THEME_TEXT_SECONDARY}}">{{SECTION_DESCR}}</p>
     </div>
 
     <div class="flex items-center justify-center gap-3 mb-12">
-      <span class="text-sm font-medium text-slate-600">Ежемесячно</span>
-      <button type="button" onclick="toggleBillingPeriod()" id="billing-toggle-btn" class="w-12 h-6 flex items-center bg-slate-200 rounded-full p-1 duration-200 cursor-pointer">
+      <span class="text-sm font-medium {{THEME_TEXT_SECONDARY}}">Ежемесячно</span>
+      <button type="button" onclick="toggleBillingPeriod()" id="billing-toggle-btn" class="w-12 h-6 flex items-center {{TOGGLE_TRACK_BG}} rounded-full p-1 duration-200 cursor-pointer border {{THEME_BORDER}}">
         <div id="billing-toggle-knob" class="bg-white w-4 h-4 rounded-full shadow-md transform duration-200"></div>
       </button>
-      <span class="text-sm font-medium text-slate-900 flex items-center gap-1.5">
-        Ежегодно <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">-20%</span>
+      <span class="text-sm font-medium {{THEME_TEXT_PRIMARY}} flex items-center gap-1.5">
+        Ежегодно <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">-20%</span>
       </span>
     </div>
 
@@ -143,11 +143,11 @@ export const TEMPLATES = {
     var knob = document.getElementById('billing-toggle-knob');
     if (btn && knob) {
       if (isYear) {
-        btn.classList.remove('bg-slate-200');
+        btn.classList.remove('bg-slate-200', 'bg-white/10');
         btn.classList.add('bg-[{{THEME_ACCENT}}]');
         knob.classList.add('translate-x-6');
       } else {
-        btn.classList.add('bg-slate-200');
+        btn.classList.add('{{TOGGLE_TRACK_BG}}');
         btn.classList.remove('bg-[{{THEME_ACCENT}}]');
         knob.classList.remove('translate-x-6');
       }
@@ -175,21 +175,21 @@ export const TEMPLATES = {
 `,
 
   pricingCard: `
-<div class="flex flex-col justify-between p-8 sm:p-10 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{BORDER_CLASS}}">
+<div class="flex flex-col justify-between p-8 sm:p-10 {{THEME_RADIUS_CARD}} {{CARD_BG_CLASS}} {{BORDER_CLASS}}">
   <div>
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-xl font-bold text-slate-900">{{PLAN_NAME}}</h3>
+      <h3 class="text-xl font-bold {{PLAN_TITLE_CLASS}}">{{PLAN_NAME}}</h3>
       {{FEATURED_BADGE}}
     </div>
     <div class="mb-8">
-      <span class="pricing-card-price text-4xl sm:text-5xl font-extrabold text-slate-950 tracking-tight" data-month="{{PRICE_MONTH}}" data-year="{{PRICE_YEAR}}">{{PRICE}}</span>
-      <span class="pricing-card-period text-xs sm:text-sm text-slate-500 ml-2 font-normal">/ {{PERIOD}}</span>
+      <span class="pricing-card-price text-4xl sm:text-5xl font-extrabold {{PRICE_CLASS}} tracking-tight" data-month="{{PRICE_MONTH}}" data-year="{{PRICE_YEAR}}">{{PRICE}}</span>
+      <span class="pricing-card-period text-xs sm:text-sm {{PERIOD_CLASS}} ml-2 font-normal">/ {{PERIOD}}</span>
     </div>
     <ul class="space-y-3.5 mb-8">
       {{FEATURES_LIST}}
     </ul>
   </div>
-  <a href="#form" onclick="if(typeof trackEvent==='function')trackEvent('cta_click',{button:'pricing_plan'});" class="w-full inline-flex items-center justify-center h-12 {{THEME_RADIUS_BTN}} {{BTN_STYLE}} font-medium text-sm transition-all duration-200 cursor-pointer">
+  <a href="{{BTN_HREF}}" onclick="if(typeof trackEvent==='function')trackEvent('cta_click',{button:'pricing_plan'});" class="w-full inline-flex items-center justify-center h-12 {{THEME_RADIUS_BTN}} {{BTN_STYLE}} font-medium text-sm transition-all duration-200 cursor-pointer">
     {{BTN_TEXT}}
   </a>
 </div>
@@ -592,8 +592,8 @@ async function handleLeadSubmit(event) {
 <section id="faq" class="w-full py-20 {{THEME_BG_PAGE}} {{THEME_FONT}} border-t {{THEME_BORDER}}">
   <div class="max-w-4xl mx-auto px-6">
     <div class="text-center max-w-2xl mx-auto mb-12">
-      <h2 class="text-3xl font-bold text-slate-900 tracking-tight mb-3">{{SECTION_TITLE}}</h2>
-      <p class="text-base text-slate-500">{{SECTION_DESCR}}</p>
+      <h2 class="text-3xl font-bold {{THEME_TEXT_PRIMARY}} tracking-tight mb-3">{{SECTION_TITLE}}</h2>
+      <p class="text-base {{THEME_TEXT_SECONDARY}}">{{SECTION_DESCR}}</p>
     </div>
     <div class="space-y-4">
       {{ITEMS}}
@@ -604,13 +604,13 @@ async function handleLeadSubmit(event) {
 
   faqItem: `
 <details class="group mb-4 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} p-5 transition-all">
-  <summary class="flex justify-between items-center font-semibold text-slate-900 cursor-pointer list-none select-none">
-    <span class="text-base text-slate-900 pr-4">{{QUESTION}}</span>
-    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-[{{THEME_ACCENT}}] transition-transform duration-200 group-open:rotate-180">
+  <summary class="flex justify-between items-center font-semibold {{THEME_TEXT_PRIMARY}} cursor-pointer list-none select-none">
+    <span class="text-base {{THEME_TEXT_PRIMARY}} font-medium pr-4">{{QUESTION}}</span>
+    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-[{{THEME_ACCENT}}]/10 border border-[{{THEME_ACCENT}}]/20 flex items-center justify-center text-[{{THEME_ACCENT}}] transition-transform duration-200 group-open:rotate-180">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
     </span>
   </summary>
-  <div class="text-sm text-slate-600 mt-3 leading-relaxed border-t border-slate-200/50 pt-3">
+  <div class="text-sm {{THEME_TEXT_SECONDARY}} mt-3 leading-relaxed border-t {{THEME_BORDER}} pt-3">
     {{ANSWER}}
   </div>
 </details>
@@ -671,8 +671,8 @@ async function handleLeadSubmit(event) {
 <section id="timeline" class="w-full py-24 {{THEME_BG_PAGE}} {{THEME_FONT}}">
   <div class="max-w-5xl mx-auto px-6">
     <div class="text-center max-w-2xl mx-auto mb-16">
-      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mb-4">{{TITLE}}</h2>
-      <p class="text-slate-500 text-base">{{DESCR}}</p>
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight {{THEME_TEXT_PRIMARY}} mb-4">{{TITLE}}</h2>
+      <p class="{{THEME_TEXT_SECONDARY}} text-base">{{DESCR}}</p>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
       {{STEPS}}
@@ -682,10 +682,10 @@ async function handleLeadSubmit(event) {
 `,
 
   timelineStep: `
-<div class="relative flex flex-col p-6 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}}">
+<div class="relative flex flex-col p-6 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} shadow-sm">
   <div class="text-3xl font-extrabold text-[{{THEME_ACCENT}}] opacity-30 font-mono mb-3">{{STEP_NUM}}</div>
-  <h3 class="text-lg font-bold text-slate-900 mb-2">{{STEP_TITLE}}</h3>
-  <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">{{STEP_DESCR}}</p>
+  <h3 class="text-lg font-bold {{THEME_TEXT_PRIMARY}} mb-2">{{STEP_TITLE}}</h3>
+  <p class="text-xs sm:text-sm {{THEME_TEXT_SECONDARY}} leading-relaxed">{{STEP_DESCR}}</p>
 </div>
 `,
 
@@ -694,14 +694,14 @@ async function handleLeadSubmit(event) {
 <section id="calculator" class="w-full py-24 {{THEME_BG_PAGE}} border-t {{THEME_BORDER}} {{THEME_FONT}}">
   <div class="max-w-4xl mx-auto px-6">
     <div class="text-center max-w-2xl mx-auto mb-12">
-      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mb-4">{{TITLE}}</h2>
-      <p class="text-slate-500 text-base">{{DESCR}}</p>
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight {{THEME_TEXT_PRIMARY}} mb-4">{{TITLE}}</h2>
+      <p class="{{THEME_TEXT_SECONDARY}} text-base">{{DESCR}}</p>
     </div>
     <div class="p-8 sm:p-10 {{THEME_RADIUS_CARD}} {{THEME_BG_CARD}} border {{THEME_BORDER}} shadow-sm">
       <div class="space-y-6 mb-8">
         <div>
           <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-medium text-slate-700">{{CALC_INPUT_LABEL}}:</span>
+            <span class="text-sm font-medium {{THEME_TEXT_PRIMARY}}">{{CALC_INPUT_LABEL}}:</span>
             <span id="calc-val-display" class="text-lg font-bold text-[{{THEME_ACCENT}}]">{{CALC_DEFAULT}} {{CALC_UNIT_LABEL}}</span>
           </div>
           <input id="calc-slider" type="range" min="{{CALC_MIN}}" max="{{CALC_MAX}}" step="{{CALC_STEP}}" value="{{CALC_DEFAULT}}" class="w-full accent-[{{THEME_ACCENT}}] cursor-pointer" oninput="updateCalculator(this.value)" />
@@ -709,8 +709,8 @@ async function handleLeadSubmit(event) {
       </div>
       <div class="pt-6 border-t {{THEME_BORDER}} flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
-          <div class="text-xs text-slate-500">Ориентировочная стоимость:</div>
-          <div id="calc-total" class="text-3xl sm:text-4xl font-extrabold text-slate-950">{{CALC_INITIAL_TOTAL}} ₽ <span class="text-sm font-normal text-slate-500">/ мес</span></div>
+          <div class="text-xs {{THEME_TEXT_SECONDARY}}">Ориентировочная стоимость:</div>
+          <div id="calc-total" class="text-3xl sm:text-4xl font-extrabold {{THEME_TEXT_PRIMARY}}">{{CALC_INITIAL_TOTAL}} ₽ <span class="text-sm font-normal {{THEME_TEXT_SECONDARY}}">/ мес</span></div>
         </div>
         <a href="#form" onclick="if(typeof trackEvent==='function')trackEvent('cta_click',{button:'calc_primary'});" class="h-12 px-8 inline-flex items-center justify-center {{THEME_RADIUS_BTN}} bg-[{{THEME_ACCENT}}] hover:bg-[{{THEME_ACCENT_HOVER}}] text-white font-medium text-sm transition-all shadow-md cursor-pointer">
           {{CALC_BTN_TEXT}}
@@ -726,7 +726,7 @@ async function handleLeadSubmit(event) {
       var base = {{CALC_BASE_PRICE}};
       var total = Number(val) * base;
       var totalElem = document.getElementById('calc-total');
-      if (totalElem) totalElem.innerHTML = total.toLocaleString('ru-RU') + ' ₽ <span class="text-sm font-normal text-slate-500">/ мес</span>';
+      if (totalElem) totalElem.innerHTML = total.toLocaleString('ru-RU') + ' ₽ <span class="text-sm font-normal {{THEME_TEXT_SECONDARY}}">/ мес</span>';
 
       clearTimeout(calcDebounceTimer);
       calcDebounceTimer = setTimeout(function() {

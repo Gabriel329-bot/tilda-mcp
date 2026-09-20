@@ -35,7 +35,7 @@ export const THEMES: Record<string, ThemeTokens> = {
     bgPageLight: 'bg-white',
     bgCardLight: 'bg-[#F8FAFC]',
     borderLight: 'border-slate-200/80',
-    textPrimary: 'text-slate-900',
+    textPrimary: 'text-slate-950',
     textSecondary: 'text-slate-600',
     fontFamily: "font-['Open_Sans',sans-serif]",
     fontImportUrl: 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap',

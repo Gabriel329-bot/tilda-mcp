@@ -95,21 +95,45 @@ export class TemplateEngine {
 
   static renderPricing(data: any, theme?: ThemeTokens | string): string {
     const activeTheme = resolveTheme(theme, data);
+    const isDark = Boolean(activeTheme.isDark && activeTheme.id !== 'light' && activeTheme.id !== 'apple');
     const plans = (data.plans || []).map((plan: any) => {
       const isFeatured = plan.is_featured;
-      const borderClass = isFeatured
-        ? `border-2 border-[${activeTheme.accent}] shadow-md bg-white`
-        : `border ${activeTheme.borderLight}`;
+
+      const cardBgClass = isDark
+        ? (isFeatured ? 'bg-[#161D31]' : (activeTheme.bgCard || 'bg-[#111624]'))
+        : 'bg-white';
+
+      const borderClass = isDark
+        ? (isFeatured
+            ? `border-2 border-[${activeTheme.accent}] shadow-[0_0_30px_rgba(94,106,210,0.25)]`
+            : 'border border-white/10')
+        : (isFeatured
+            ? `border-2 border-[${activeTheme.accent}] shadow-md`
+            : `border ${activeTheme.borderLight || 'border-slate-200'}`);
+
+      const planTitleClass = isDark ? 'text-white' : 'text-slate-900';
+      const priceClass = isDark ? 'text-white' : 'text-slate-900';
+      const periodClass = isDark ? (isFeatured ? 'text-slate-300' : 'text-slate-400') : 'text-slate-500';
+
       const badgeText = plan.badge || (isFeatured ? 'Рекомендуем' : '');
       const badge = badgeText
-        ? `<span class="px-2.5 py-0.5 ${activeTheme.radiusCard} bg-[${activeTheme.accent}]/10 text-[${activeTheme.accent}] text-xs font-semibold uppercase">${badgeText}</span>`
+        ? `<span class="px-2.5 py-0.5 ${activeTheme.radiusCard} ${isDark ? `bg-[${activeTheme.accent}]/20 border border-[${activeTheme.accent}]/30` : `bg-[${activeTheme.accent}]/10`} text-[${activeTheme.accent}] text-xs font-semibold uppercase">${badgeText}</span>`
         : '';
-      const btnStyle = isFeatured
-        ? `bg-[${activeTheme.accent}] hover:bg-[${activeTheme.accentHover}] text-white shadow-md`
-        : 'bg-slate-200 hover:bg-slate-300 text-slate-800';
+
+      const btnStyle = isDark
+        ? (isFeatured
+            ? `bg-[${activeTheme.accent}] hover:bg-[${activeTheme.accentHover}] text-white shadow-lg`
+            : 'bg-white/10 hover:bg-white/15 text-white border border-white/10')
+        : (isFeatured
+            ? `bg-[${activeTheme.accent}] hover:bg-[${activeTheme.accentHover}] text-white shadow-md`
+            : 'bg-slate-200 hover:bg-slate-300 text-slate-800');
+
+      const featureTextColor = isDark
+        ? (isFeatured ? 'text-slate-200' : 'text-slate-300')
+        : 'text-slate-700';
 
       const featuresList = (plan.features || []).map((f: string) => `
-        <li class="flex items-start gap-3 text-sm text-slate-700">
+        <li class="flex items-start gap-3 text-sm ${featureTextColor}">
           <span class="mt-0.5 flex-shrink-0 text-[${activeTheme.accent}]">${ICONS.check}</span>
           <span>${f}</span>
         </li>
@@ -127,22 +151,32 @@ export class TemplateEngine {
         priceYear = `${discountedMonthly.toLocaleString('ru-RU')}${currency}`.replace(/\u00a0/g, ' ');
       }
 
+      const btnHref = plan.btn_href || plan.href || '#form';
+
       return TEMPLATES.pricingCard
-        .replace('{{PLAN_NAME}}', plan.name || '')
+        .replace('{{CARD_BG_CLASS}}', cardBgClass)
         .replace('{{BORDER_CLASS}}', borderClass)
+        .replace('{{PLAN_TITLE_CLASS}}', planTitleClass)
+        .replace('{{PLAN_NAME}}', plan.name || '')
         .replace('{{FEATURED_BADGE}}', badge)
+        .replace('{{PRICE_CLASS}}', priceClass)
         .replace('{{PRICE}}', priceMonth)
         .replace('{{PRICE_MONTH}}', priceMonth)
         .replace('{{PRICE_YEAR}}', priceYear)
+        .replace('{{PERIOD_CLASS}}', periodClass)
         .replace('{{PERIOD}}', plan.period || 'месяц')
         .replace('{{FEATURES_LIST}}', featuresList)
+        .replace('{{BTN_HREF}}', btnHref)
         .replace('{{BTN_STYLE}}', btnStyle)
         .replace('{{BTN_TEXT}}', plan.btn_text || 'Выбрать тариф');
     }).join('\n');
 
+    const toggleTrackBg = isDark ? 'bg-white/10' : 'bg-slate-200';
+
     const html = TEMPLATES.pricingContainer
       .replace('{{SECTION_TITLE}}', data.title || 'Формы обучения')
       .replace('{{SECTION_DESCR}}', data.descr || '')
+      .replace(/\{\{TOGGLE_TRACK_BG\}\}/g, toggleTrackBg)
       .replace('{{PLANS}}', plans);
 
     return applyTokens(html, activeTheme);
