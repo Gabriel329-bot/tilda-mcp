@@ -788,6 +788,165 @@ describe('Resilience & Retry Mechanism (TildaHttpClient)', () => {
     expect(preview.html).toContain('<!-- Google Analytics 4 (gtag.js) -->');
     expect(preview.html).toContain('<!-- Yandex.Metrika counter -->');
   });
+
+  it('Scenario 16: Multipage Site Orchestrator (Two-Pass Provisioning, Cross-Linking, Rollback & Dry-Run)', async () => {
+    const { MultipageOrchestrator } = await import('../src/generators/multipage-orchestrator.js');
+
+    // 1. Mock TildaHttpClient to verify Two-Pass Provisioning and Cross-Linking
+    const createdPages: Array<{ projectId: string; title: string }> = [];
+    const updatedBlocks: Array<{ pageId: string; recId: string; payload: any }> = [];
+    const publishedPages: string[] = [];
+    let pageCounter = 1000;
+
+    const mockClient: any = {
+      checkAuth: async () => {},
+      createPage: async (projectId: string, title: string) => {
+        const id = String(pageCounter++);
+        createdPages.push({ projectId, title });
+        return id;
+      },
+      initSession: async () => {},
+      addBlock: async (_pageId: string, tpl: string) => `rec_${tpl}_${pageCounter}`,
+      updateBlock: async (pageId: string, recId: string, payload: any) => {
+        updatedBlocks.push({ pageId, recId, payload });
+      },
+      publishPage: async (pageId: string) => {
+        publishedPages.push(pageId);
+        return {
+          pageId,
+          publishedUrl: `https://testsite.tilda.ws/page${pageId}.html`,
+          publishedAt: new Date().toISOString(),
+        };
+      },
+      deletePage: async () => true,
+    };
+
+    const orchestrator = new MultipageOrchestrator(mockClient);
+
+    const report = await orchestrator.generateSite({
+      project_id: '40607103',
+      global_theme: 'linear',
+      navigation: [
+        { label: 'Главная', target_slug: 'home' },
+        { label: 'Тарифы', target_slug: 'pricing' },
+        { label: 'Контакты', target_slug: 'contact' },
+      ],
+      pages: [
+        {
+          slug: 'home',
+          title: 'Главная страница',
+          sections: {
+            hero: { title: 'Платформа облачных вычислений' },
+            features: { title: 'Возможности', cards: [{ title: 'Скорость' }] },
+          },
+        },
+        {
+          slug: 'pricing',
+          title: 'Тарифные планы',
+          sections: {
+            hero: { title: 'Прозрачные тарифы' },
+            pricing: { title: 'Тарифы', plans: [{ name: 'Базовый', price: '1000' }] },
+          },
+        },
+        {
+          slug: 'contact',
+          title: 'Связаться с нами',
+          sections: {
+            hero: { title: 'Контакты' },
+            form: { title: 'Форма связи' },
+          },
+        },
+      ],
+    });
+
+    expect(report.success).toBe(true);
+    expect(report.pages_count).toBe(3);
+    expect(createdPages.length).toBe(3);
+    expect(publishedPages.length).toBe(3);
+    expect(report.cross_linking_status).toBe('verified');
+    expect(report.navigation_map.home).toBe('https://testsite.tilda.ws/page1000.html');
+    expect(report.navigation_map.pricing).toBe('https://testsite.tilda.ws/page1001.html');
+    expect(report.navigation_map.contact).toBe('https://testsite.tilda.ws/page1002.html');
+
+    // Verify header on each page received cross-page navigation
+    const headerUpdates = updatedBlocks.filter((u) => u.payload['menuitems-title[0]']);
+    expect(headerUpdates.length).toBe(3);
+    expect(headerUpdates[0].payload['menuitems-title[0]']).toBe('Главная');
+    expect(headerUpdates[0].payload['menuitems-link[0]']).toBe('page1000.html');
+    expect(headerUpdates[0].payload['menuitems-title[1]']).toBe('Тарифы');
+    expect(headerUpdates[0].payload['menuitems-link[1]']).toBe('page1001.html');
+    expect(headerUpdates[0].payload['menuitems-title[2]']).toBe('Контакты');
+    expect(headerUpdates[0].payload['menuitems-link[2]']).toBe('page1002.html');
+
+    // 2. Automatic Rollback Verification
+    const deletedPages: string[] = [];
+    let failCounter = 2000;
+    const failingClient: any = {
+      checkAuth: async () => {},
+      createPage: async () => String(failCounter++),
+      initSession: async () => {},
+      addBlock: async () => 'rec_err',
+      updateBlock: async (pageId: string) => {
+        if (pageId === '2001') {
+          throw new Error('Simulated network drop on page 2001');
+        }
+      },
+      publishPage: async () => ({ publishedUrl: 'https://test.ws' }),
+      deletePage: async (pageId: string) => {
+        deletedPages.push(pageId);
+        return true;
+      },
+    };
+
+    const failingOrchestrator = new MultipageOrchestrator(failingClient);
+
+    await expect(
+      failingOrchestrator.generateSite({
+        project_id: '40607103',
+        pages: [
+          { slug: 'p1', title: 'Page 1', sections: { hero: { title: 'H1' } } },
+          { slug: 'p2', title: 'Page 2', sections: { hero: { title: 'H2' } } },
+        ],
+      })
+    ).rejects.toThrow('Simulated network drop on page 2001');
+
+    // Both created pages should have been deleted in rollback
+    expect(deletedPages).toEqual(['2000', '2001']);
+
+    // 3. Dry-Run Verification (Local HTML previews with cross-links)
+    const fs = await import('fs');
+    const dryRunReport = await orchestrator.generateSite({
+      project_id: 'local_preview',
+      dryRun: true,
+      global_theme: 'apple',
+      navigation: [
+        { label: 'Старт', target_slug: 'index' },
+        { label: 'Цены', target_slug: 'prices' },
+      ],
+      pages: [
+        {
+          slug: 'index',
+          title: 'Портал Enterprise',
+          sections: { hero: { title: 'Главная' } },
+        },
+        {
+          slug: 'prices',
+          title: 'Стоимость подписки',
+          sections: { hero: { title: 'Прайс-лист' } },
+        },
+      ],
+    });
+
+    expect(dryRunReport.success).toBe(true);
+    expect(dryRunReport.pages_count).toBe(2);
+    expect(fs.existsSync('preview/index.html')).toBe(true);
+    expect(fs.existsSync('preview/prices.html')).toBe(true);
+
+    const indexHtml = fs.readFileSync('preview/index.html', 'utf-8');
+    expect(indexHtml).toContain('index.html');
+    expect(indexHtml).toContain('prices.html');
+    expect(indexHtml).toContain('Портал Enterprise');
+  });
 });
 
 

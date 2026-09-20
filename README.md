@@ -2,7 +2,7 @@
 
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-blue.svg)](https://modelcontextprotocol.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
-[![Vitest](https://img.shields.io/badge/Vitest-16%2F16%20Passed-brightgreen.svg)](https://vitest.dev/)
+[![Vitest](https://img.shields.io/badge/Vitest-28%2F28%20Passed-brightgreen.svg)](https://vitest.dev/)
 [![License](https://img.shields.io/badge/License-BSL%201.1-amber.svg)](LICENSE)
 
 **Tilda MCP Server** — промышленный сервер по протоколу **Model Context Protocol (MCP)** для автономной генерации, дизайн-оркестрации и точечного редактирования коммерческих лендингов на платформе **Tilda Publishing**.
@@ -243,7 +243,14 @@ tilda-mcp/
 * Сохраняет файл в `preview/landing-preview.html` и возвращает готовую кликабельную ссылку `file:///...`.
 * Принимает ту же конфигурацию, что и `tilda_fast_generate_landing`.
 
-### 3. `tilda_update_page_section`
+### 3. `tilda_generate_multipage_site`
+Сквозная двухпроходная генерация многостраничного сайта (2–5 страниц) со сквозной перелинковкой навигации и автоматическим откатом:
+* **Pass 1 (Provisioning):** создаются все страницы в проекте, формируется соответствие `slug -> pageId` и относительные ссылки `page${pageId}.html`.
+* **Pass 2 (Cross-Linking & Assembly):** генерируются Header и Footer с единым меню навигации, связывающим все страницы между собой, собираются секции и выполняется публикация.
+* **Auto-Rollback:** при сбое на любой из страниц все созданные в рамках сессии страницы удаляются из проекта (`movetobinpage`).
+* **Dry Run:** локальная генерация комплекта связанных HTML-файлов (`preview/${slug}.html`) без обращений к Tilda API.
+
+### 4. `tilda_update_page_section`
 Хирургическое обновление конкретной секции без пересборки всей страницы (**~2.5–3 сек**):
 * Обновление цен в тарифах (`pricing`).
 * Изменение вопросов в `faq`.
@@ -315,36 +322,30 @@ TILDA_PROJECT_ID="40607103"
 
 ---
 
-## 🧪 Тестирование
+## 🧪 Тестирование и контроль качества
 
-Набор тестов проверяет надежность HTTP-движка, механизмы ретраев, отката, генерацию компонентов Template Vault, переключатели тарифов, Schema.org и сквозную аналитику:
+### 1. Быстрые модульные тесты устойчивости
+Проверка сетевых ретраев, транзакционного отката, санитайзера, сборщиков блоков, сквозной аналитики и многостраничной генерации (**17 сценариев, ~150 мс**):
 
 ```bash
 npm test
 ```
 
-Результат:
-```
- ✓ tests/resilience.test.ts (16 tests)
-   - Scenario 1: Retry Success (429 Too Many Requests -> 200 OK)
-   - Scenario 2: Retry Exhaustion (3x 502 -> Throws Error)
-   - Scenario 2b: Retry Exhaustion on Network Error (ECONNRESET)
-   - Scenario 3: Rollback on Failure (deletePage calls movetobinpage)
-   - Scenario 4: Rollback Error Shielding
-   - Scenario 5: JSON & Text Field Sanitization
-   - Scenario 6: Dark Preset Pricing CSS & Monolithic Template Mapping
-   - Scenario 7: DJI Preset Tokens, Component Rules & CSS
-   - Scenario 8: Template Vault (Hero, Bento, Metrics, Pricing) & SVG Icons
-   - Scenario 9: Dynamic Theme Switcher & Design Tokens (dji, dark, linear)
-   - Scenario 10: Custom Studio Footer Section (T123)
-   - Scenario 11: Light Preset & Studio Components (Apple Style)
-   - Scenario 12: Commercial Upgrade (Marquee, Timeline, Calculator, Billing Toggle, Schema.org, CRO)
-   - Scenario 13: Phase 1 Stabilization (Dehardcoded Success Text, Phone Validation, Honeypot, CRO flags)
-   - Scenario 14: Phase 2 Core Advanced & DX (Local Preview, Calculator Customization, Telegram Backup)
-   - Scenario 15: Phase 3 End-to-End Analytics & Goal Tracking (Yandex.Metrika + GA4 + Universal Dispatcher)
+### 2. Автоматический визуальный регрессионный тест (Playwright)
+Запуск headless Chromium для глубокой проверки верстки в двух ключевых вьюпортах: **Mobile Safari (375×812)** и **Desktop Modern (1440×900)** (**11 проверок**):
+* **Zero Horizontal Overflow:** подтверждение `scrollWidth <= innerWidth` и отсутствия паразитного горизонтального скролла на мобильных.
+* **Safe Area & Bottom Overlap:** валидация нижнего паддинга `paddingBottom >= 12px` у `#sticky-mobile-cta` и кликабельности формы.
+* **Интерактив:** проверка живого обновления калькулятора в DOM, переключения периода тарифов (`-20%`) и раскрытия FAQ `<details>`.
+* **CRO & Cookies:** проверка скрытия мобильной плашки на десктопе, подтверждения Cookie Consent Banner и сохранения в `localStorage`.
 
- Test Files  1 passed (1)
-      Tests  16 passed (16)
+```bash
+npm run test:visual
+```
+
+### 3. Полный прогон всех тестов (28 проверок)
+
+```bash
+npm run test:all
 ```
 
 ---

@@ -18,6 +18,7 @@ import {
   packageCalculatorSection,
 } from './generators/block-packager.js';
 import { buildLocalPreview } from './generators/preview-builder.js';
+import { MultipageOrchestrator } from './generators/multipage-orchestrator.js';
 
 // Initialize MCP Server
 const server = new McpServer({
@@ -638,6 +639,81 @@ server.tool(
           {
             type: 'text',
             text: `Preview generation error: ${err.message}`,
+          },
+        ],
+      };
+    }
+  }
+);
+
+// =========================================================================
+// TOOL 1c: tilda_generate_multipage_site (Multi-Page Site Orchestrator)
+// =========================================================================
+server.tool(
+  'tilda_generate_multipage_site',
+  'Сквозная двухпроходная генерация многостраничного сайта в Tilda со сквозной перелинковкой навигации и автоматическим откатом.',
+  {
+    project_id: z.string().describe('ID проекта в Tilda'),
+    global_theme: z
+      .enum(['dji', 'linear', 'dark', 'light', 'minimal', 'warm'])
+      .default('linear')
+      .optional()
+      .describe('Глобальная дизайн-система сайта'),
+    navigation: z
+      .array(
+        z.object({
+          label: z.string().describe('Текст ссылки в меню'),
+          target_slug: z.string().describe('Slug страницы назначения'),
+        })
+      )
+      .optional()
+      .describe('Единая карта сквозной навигации сайта'),
+    pages: z
+      .array(
+        z.object({
+          slug: z.string().describe('Уникальный slug страницы (например: home, pricing, docs, contact)'),
+          title: z.string().describe('Заголовок страницы'),
+          descr: z.string().optional().describe('Описание страницы'),
+          preset: z
+            .enum(['dji', 'linear', 'dark', 'light', 'minimal', 'warm'])
+            .optional()
+            .describe('Индивидуальная дизайн-система страницы (по умолчанию global_theme)'),
+          sections: landingSectionsSchema,
+        })
+      )
+      .min(2)
+      .max(5)
+      .describe('Массив спецификаций страниц сайта (от 2 до 5 страниц)'),
+    safeMode: z.boolean().optional().default(true).describe('Режим деликатных пауз между запросами к Tilda API'),
+    dryRun: z.boolean().optional().default(false).describe('Локальная сборка превью без обращения к Tilda API'),
+  },
+  async ({ project_id, global_theme, navigation, pages, safeMode, dryRun }) => {
+    try {
+      const orchestrator = new MultipageOrchestrator(undefined, { safeMode });
+      const report = await orchestrator.generateSite({
+        project_id,
+        global_theme: (global_theme as any) || 'linear',
+        navigation,
+        pages: pages as any,
+        safeMode,
+        dryRun,
+      });
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(report, null, 2),
+          },
+        ],
+      };
+    } catch (err: any) {
+      return {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: `Multi-page generation error: ${err.message}`,
           },
         ],
       };
