@@ -490,7 +490,7 @@ function renderLotsGrid(lots) {
     var pricePerMeter = Math.round(lot.price / lot.area).toLocaleString('ru-RU') + ' ₽/м²';
 
     return '' +
-      '<div class="p-6 rounded-3xl bg-white border border-[#1A1816]/[0.08] shadow-sm hover:border-[#8E734E]/50 transition-all flex flex-col justify-between group cursor-pointer text-left" onclick="openLotModalById(\\'' + lot.id + '\\')">' +
+      '<div class="lot-card p-6 rounded-3xl bg-white border border-[#1A1816]/[0.08] shadow-sm hover:border-[#8E734E]/50 transition-all flex flex-col justify-between group cursor-pointer text-left" onclick="openLotModalById(\\'' + lot.id + '\\')">' +
         '<div>' +
           '<div class="flex items-center justify-between mb-3">' +
             '<span class="text-xs font-mono text-[#62605B]">' + lot.id + '</span>' +
@@ -576,7 +576,7 @@ if (document.readyState === 'loading') {
 
   // 6. FLOOR-BY-FLOOR CROSS SECTIONS (Поэтажные планы 2–4 этажей с маркерами лотов)
   floorPlans: `
-<section class="w-full py-24 sm:py-32 bg-[#F7F5F0] border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
+<section id="floor-plans" class="w-full py-24 sm:py-32 bg-[#F7F5F0] border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
   <div class="max-w-7xl mx-auto px-6">
     <div class="max-w-3xl mb-16 text-left">
       <span class="text-[11px] font-mono font-semibold uppercase tracking-[0.25em] text-[#8E734E] block mb-3">ПОЭТАЖНЫЕ ПЛАНЫ // 04</span>
@@ -717,7 +717,7 @@ function switchFloorPlan(floorKey, btn) {
 
   // 9. CONSTRUCTION CHRONICLE (Ежемесячный фотоархив Tilda Feeds)
   chronicle: `
-<section class="w-full py-24 sm:py-32 bg-white border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
+<section id="chronicle" class="w-full py-24 sm:py-32 bg-white border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
   <div class="max-w-7xl mx-auto px-6">
     <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-16 gap-4 text-left">
       <div>
@@ -780,7 +780,7 @@ function switchFloorPlan(floorKey, btn) {
 
   // 10. FINANCIAL SCENARIOS & MORTGAGE CALCULATOR (Калькулятор платежей 2026, рассрочка 0%)
   finance: `
-<section class="w-full py-24 sm:py-32 bg-[#F7F5F0] border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
+<section id="finance" class="w-full py-24 sm:py-32 bg-[#F7F5F0] border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
   <div class="max-w-5xl mx-auto px-6 text-left">
     <div class="text-center max-w-2xl mx-auto mb-16">
       <span class="text-[11px] font-mono font-semibold uppercase tracking-[0.25em] text-[#8E734E] block mb-3">ФИНАНСОВЫЕ СЦЕНАРИИ // 08</span>
@@ -871,7 +871,7 @@ function runMortgageCalc() {
 
   // 11. CLOSED ARCHITECTURAL MONOGRAPH (Лид-магнит на скачивание буклета с 17 планировками)
   booklet: `
-<section class="w-full py-24 sm:py-32 bg-white border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
+<section id="booklet" class="w-full py-24 sm:py-32 bg-white border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
   <div class="max-w-5xl mx-auto px-6">
     <div class="p-8 sm:p-14 rounded-3xl bg-[#F7F5F0] border border-[#1A1816]/[0.08] grid grid-cols-1 md:grid-cols-12 gap-10 items-center text-left">
       <div class="md:col-span-7">
@@ -993,7 +993,7 @@ function handleMonographSubmit(e) {
 
   // 13. ABOUT DEVELOPER (15 лет на рынке, камерный девелопмент, финансовые гарантии)
   developer: `
-<section class="w-full py-24 sm:py-32 bg-white border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
+<section id="developer" class="w-full py-24 sm:py-32 bg-white border-b border-[#1A1816]/[0.07] font-['Manrope',sans-serif]">
   <div class="max-w-7xl mx-auto px-6 text-left">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
       <div class="lg:col-span-7">
