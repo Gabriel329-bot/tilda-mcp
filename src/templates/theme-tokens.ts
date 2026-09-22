@@ -159,6 +159,26 @@ export const THEMES: Record<string, ThemeTokens> = {
     fontFamily: "font-['Manrope',sans-serif]",
     fontImportUrl: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Manrope:wght@400;500;600;700&display=swap',
   },
+  // Архитектурная монография / Клубный дом
+  clubhouse: {
+    id: 'clubhouse',
+    isDark: false,
+    accent: '#8E734E',
+    accentHover: '#77603F',
+    accentGlow: 'rgba(142, 115, 78, 0.15)',
+    radiusCard: 'rounded-2xl',
+    radiusBtn: 'rounded-full',
+    bgPage: 'bg-[#F7F5F0]',
+    bgCard: 'bg-white',
+    border: 'border-[#1A1816]/[0.07]',
+    bgPageLight: 'bg-[#F7F5F0]',
+    bgCardLight: 'bg-white',
+    borderLight: 'border-[#1A1816]/[0.07]',
+    textPrimary: 'text-[#1A1816]',
+    textSecondary: 'text-[#62605B]',
+    fontFamily: "font-['Manrope',sans-serif]",
+    fontImportUrl: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+  },
 };
 
 export function getThemeTokens(presetName?: string): ThemeTokens {

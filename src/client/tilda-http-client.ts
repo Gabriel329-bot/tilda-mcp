@@ -467,7 +467,13 @@ export class TildaHttpClient {
 
     // If redirected to alternate domain (tilda.ru <-> tilda.cc)
     if ((res.status === 301 || res.status === 302) && (loc.includes('tilda.ru') || loc.includes('tilda.cc'))) {
-      const altBase = loc.includes('tilda.ru') ? 'https://tilda.ru' : 'https://tilda.cc';
+      let altBase: string;
+      try {
+        const locUrl = loc.startsWith('http') ? new URL(loc) : new URL(loc, this.baseUrl);
+        altBase = locUrl.hostname.includes('tilda.') ? `${locUrl.protocol}//${locUrl.hostname}` : (this.baseUrl.includes('tilda.ru') ? 'https://tilda.cc' : 'https://tilda.ru');
+      } catch {
+        altBase = this.baseUrl.includes('tilda.ru') ? 'https://tilda.cc' : 'https://tilda.ru';
+      }
       this.baseUrl = altBase;
       this.commondomain = new URL(altBase).hostname;
       res = await this.request(`${altBase}/projects/`, {
